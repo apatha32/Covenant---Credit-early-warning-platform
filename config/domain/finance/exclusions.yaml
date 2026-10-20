@@ -1,0 +1,10 @@
+# Finance domain pack: companies excluded from the universe, by SIC code.
+# Excluded companies are flagged (curated.company.is_excluded), never deleted.
+version: 1
+
+# Exact codes win over ranges, so a shell company is tagged shell_company, not financial_sector.
+sic_codes:
+  - { code: 6770, reason: shell_company, description: "Blank checks / SPACs" }
+
+sic_ranges:
+  - { min: 6000, max: 6799, reason: financial_sector, description: "Banks, insurance, REITs, investment vehicles" }

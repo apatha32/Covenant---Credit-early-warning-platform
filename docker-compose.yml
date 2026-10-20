@@ -1,0 +1,22 @@
+# Local Postgres + pgvector for development and tests. Port 54329 avoids clashing with a
+# locally installed Postgres. Supabase-specific bits (auth schema, roles) come from
+# supabase/local/supabase_shim.sql, applied by `make db-reset`.
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "54329:5432"
+    volumes:
+      - tripwire-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  tripwire-db:

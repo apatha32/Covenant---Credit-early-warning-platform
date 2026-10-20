@@ -1,0 +1,22 @@
+# Model settings. Code reads model names from here; never hard-code them.
+version: 1
+
+llm:
+  # Bulk text-signal extraction (high volume, cost-sensitive).
+  extraction_default: claude-haiku-5-5
+  # Per-signal-type upgrades, set only where the Phase 5 eval shows Haiku is meaningfully worse.
+  # Example: going_concern: claude-sonnet-5-5
+  extraction_overrides: {}
+  # "Ask the filings" RAG Q&A.
+  qa: claude-sonnet-5-5
+
+embedding:
+  # Claude has no embeddings endpoint; provider is an open question (see README).
+  # `dimensions` must match the vector column in curated.filing_chunk.
+  provider: voyage
+  model: voyage-3.5
+  dimensions: 1024
+
+ml:
+  random_seed: 42
+  primary_metric: pr_auc

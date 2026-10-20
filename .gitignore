@@ -1,0 +1,31 @@
+.env
+.env.*
+!.env.example
+
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local data: raw downloads and Parquet never live in git
+data/
+*.parquet
+*.zip
+
+# Model artifacts
+artifacts/
+
+node_modules/
+.next/
+.vercel/
+
+.DS_Store
+.ipynb_checkpoints/
+
+# Supabase CLI local state
+supabase/.branches/
+supabase/.temp/

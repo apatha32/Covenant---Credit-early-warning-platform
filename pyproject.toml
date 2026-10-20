@@ -1,0 +1,69 @@
+[project]
+name = "tripwire"
+version = "0.1.0"
+description = "Credit early warning platform: SEC filings in, explainable 12-month distress alerts out."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "tripwire-common",
+    "tripwire-ingest",
+    "tripwire-pipeline",
+    "tripwire-ml",
+    "tripwire-llm",
+    "tripwire-api",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "ruff>=0.8",
+    "types-pyyaml>=6.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/common", "services/*"]
+
+[tool.uv.sources]
+tripwire-common = { workspace = true }
+tripwire-ingest = { workspace = true }
+tripwire-pipeline = { workspace = true }
+tripwire-ml = { workspace = true }
+tripwire-llm = { workspace = true }
+tripwire-api = { workspace = true }
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "S", "SIM", "RUF"]
+ignore = ["S101"]  # assert is fine in tests
+
+[tool.ruff.lint.isort]
+known-first-party = ["tripwire_*"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S608"]  # tests build SQL from fixed identifiers
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["packages/common/src", "services/*/src", "tests", "scripts"]
+explicit_package_bases = true
+mypy_path = [
+    "packages/common/src",
+    "services/ingest/src",
+    "services/pipeline/src",
+    "services/ml/src",
+    "services/llm/src",
+    "services/api/src",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = ["db: needs a Postgres server (see tests/conftest.py)"]

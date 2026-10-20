@@ -1,0 +1,15 @@
+# Finance domain pack: filing events extracted from EDGAR submissions.
+version: 1
+
+# 8-K item codes -> canonical event_type (curated.filing_event.event_type).
+eight_k_items:
+  "1.03": { event_type: bankruptcy, description: "Bankruptcy or receivership" }
+  "3.01": { event_type: delisting_notice, description: "Notice of delisting or failure to satisfy listing rule" }
+  "4.01": { event_type: auditor_change, description: "Changes in registrant's certifying accountant" }
+  "4.02": { event_type: non_reliance, description: "Non-reliance on previously issued financial statements" }
+  "5.02": { event_type: exec_departure, description: "Departure or appointment of directors or officers" }
+
+# Whole form types that are events in themselves.
+form_types:
+  "NT 10-K": { event_type: late_filing_annual, description: "Notification of late 10-K filing" }
+  "NT 10-Q": { event_type: late_filing_quarterly, description: "Notification of late 10-Q filing" }

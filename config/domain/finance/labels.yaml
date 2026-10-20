@@ -1,0 +1,14 @@
+# Finance domain pack: distress label definition.
+# label(cik, T) = 1 if an enabled positive event is filed within (T, T + horizon_months].
+version: 1
+horizon_months: 12
+
+# Event types (from event_codes.yaml) that are always positive.
+primary_events: [bankruptcy]
+
+# Optional extra positives; off by default.
+secondary_events:
+  - { event_type: delisting_notice, enabled: false }
+
+secondary_text_signals:
+  - { signal_type: going_concern, enabled: false, min_confidence: 0.8 }
