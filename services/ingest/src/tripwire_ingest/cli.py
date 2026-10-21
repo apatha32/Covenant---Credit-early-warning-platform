@@ -221,10 +221,15 @@ def main(argv: list[str] | None = None) -> None:
     sub.add_parser("fred", help="land the domain pack's FRED series")
     bulk = sub.add_parser("bulk", help="download SEC bulk zips (several GB) into raw storage")
     bulk.add_argument(
-        "names", nargs="*", choices=[*BULK_FILES, []], default=[], help="which files (default: all)"
+        "names",
+        nargs="*",
+        metavar="NAME",
+        help=f"which files: {', '.join(BULK_FILES)} (default: all)",
     )
     sub.add_parser("scan", help="scan for primary-label 8-K items and write the spot-check report")
     args = parser.parse_args(argv)
+    if args.command == "bulk" and set(args.names) - set(BULK_FILES):
+        parser.error(f"bulk: unknown file(s) {sorted(set(args.names) - set(BULK_FILES))}")
 
     settings = get_settings()
     configure_logging("ingest")
