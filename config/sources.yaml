@@ -1,0 +1,24 @@
+# External data sources. If a URL moves, update it here (and SPEC.md), never in code.
+version: 1
+
+sec:
+  # SEC's fair-access limit is 10 requests/sec per IP; stay under it with margin.
+  rate_per_sec: 8
+  burst: 1
+  max_retries: 5
+  timeout_seconds: 30
+  tickers_url: https://www.sec.gov/files/company_tickers.json
+  submissions_url: https://data.sec.gov/submissions/CIK{cik10}.json
+  submissions_page_url: https://data.sec.gov/submissions/{name}
+  companyfacts_url: https://data.sec.gov/api/xbrl/companyfacts/CIK{cik10}.json
+  bulk_submissions_url: https://www.sec.gov/Archives/edgar/daily-index/bulkdata/submissions.zip
+  bulk_companyfacts_url: https://www.sec.gov/Archives/edgar/daily-index/xbrl/companyfacts.zip
+
+fred:
+  # FRED allows 120 requests/minute.
+  rate_per_sec: 1.5
+  burst: 1
+  max_retries: 5
+  timeout_seconds: 60
+  observations_url: https://api.stlouisfed.org/fred/series/observations
+  page_size: 100000

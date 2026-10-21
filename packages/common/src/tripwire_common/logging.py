@@ -48,3 +48,6 @@ def configure_logging(service: str, level: str | None = None) -> None:
     root = logging.getLogger()
     root.handlers[:] = [handler]
     root.setLevel((level or get_settings().log_level).upper())
+    # httpx logs full request URLs at INFO, which would include secrets such as FRED's api_key.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)

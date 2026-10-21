@@ -1,0 +1,16 @@
+# Finance domain pack: FRED macro series.
+#
+# vintages: true  -> pull every ALFRED vintage; release_date = realtime_start (true point-in-time).
+# vintages: false -> market series that are not revised (and exceed FRED's 2,000-vintage cap);
+#                    release_date = observation_date + release_lag_days.
+#
+# BAMLH0A0HYM2 (ICE BofA HY OAS) was in the original spec, but since April 2026 FRED serves only
+# its last 3 years, which cannot cover a 2010+ training window. BAA10Y (Moody's Baa - 10y Treasury,
+# from 1986) is the credit-spread proxy instead. See SPEC.md section 3.9.
+version: 1
+series:
+  - { id: BAA10Y, vintages: false, release_lag_days: 1, description: "Moody's Baa corporate yield minus 10-year Treasury" }
+  - { id: FEDFUNDS, vintages: true, description: "Effective federal funds rate (monthly)" }
+  - { id: UNRATE, vintages: true, description: "Unemployment rate" }
+  - { id: INDPRO, vintages: true, description: "Industrial production index" }
+  - { id: DGS10, vintages: false, release_lag_days: 1, description: "10-year Treasury constant maturity yield" }

@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     tripwire_domain_pack: str = "finance"
     tripwire_config_dir: Path = REPO_ROOT / "config"
     log_level: str = "INFO"
+    tripwire_storage: Literal["local", "supabase"] = "local"
+    tripwire_data_dir: Path = REPO_ROOT / "data"
 
     # Secrets and endpoints are optional at load time so each service only needs
     # what it uses; call `require()` at the point of use.
@@ -38,6 +40,11 @@ class Settings(BaseSettings):
     supabase_anon_key: SecretStr | None = None
     supabase_service_role_key: SecretStr | None = None
     database_url: SecretStr | None = None
+
+    @field_validator("tripwire_config_dir", "tripwire_data_dir")
+    @classmethod
+    def _relative_to_repo(cls, value: Path) -> Path:
+        return value if value.is_absolute() else REPO_ROOT / value
 
     @field_validator("sec_user_agent")
     @classmethod

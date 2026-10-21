@@ -1,0 +1,35 @@
+# Finance domain pack: known Chapter 11 filers seeded into the dev sample (SPEC.md 3.11).
+# Used only to choose the dev sample and to spot-check the Item 1.03 scan. Labels are always
+# derived by scanning filings, never from this list.
+#
+# CIKs were verified against SEC submissions on 2026-10-20 (name/former names + an 8-K Item 1.03
+# filing in the expected year). Dropped: CEC Entertainment (CIK 813920) has no Item 1.03 filing.
+# WeWork has SIC 6512 (real estate), so the sector exclusion rule excludes it; it is kept here so
+# the conflict stays visible in the spot-check report.
+version: 1
+companies:
+  - { cik: 1657853, name: Hertz Global Holdings, petition_year: 2020 }
+  - { cik: 1166126, name: J.C. Penney, petition_year: 2020 }
+  - { cik: 20520, name: Frontier Communications, petition_year: 2020 }
+  - { cik: 895126, name: Chesapeake Energy, petition_year: 2020 }
+  - { cik: 949039, name: Diamond Offshore Drilling, petition_year: 2020 }
+  - { cik: 1255474, name: Whiting Petroleum, petition_year: 2020 }
+  - { cik: 1609253, name: California Resources, petition_year: 2020 }
+  - { cik: 1525773, name: Intelsat, petition_year: 2020 }
+  - { cik: 1502034, name: GNC Holdings, petition_year: 2020 }
+  - { cik: 878726, name: Tuesday Morning, petition_year: 2020 }
+  - { cik: 1567892, name: Mallinckrodt, petition_year: 2020 }
+  - { cik: 278130, name: Pier 1 Imports, petition_year: 2020 }
+  - { cik: 887921, name: Revlon, petition_year: 2022 }
+  - { cik: 1593034, name: Endo International, petition_year: 2022 }
+  - { cik: 1592058, name: Party City, petition_year: 2023 }
+  - { cik: 886158, name: Bed Bath & Beyond, petition_year: 2023 }
+  - { cik: 84129, name: Rite Aid, petition_year: 2023 }
+  - { cik: 1813756, name: WeWork, petition_year: 2023 }
+  - { cik: 28823, name: Diebold Nixdorf, petition_year: 2023 }
+  - { cik: 716006, name: Yellow Corp, petition_year: 2023 }
+  - { cik: 1775625, name: SmileDirectClub, petition_year: 2023 }
+  - { cik: 1759546, name: Lordstown Motors, petition_year: 2023 }
+  - { cik: 1498710, name: Spirit Airlines, petition_year: 2024 }
+  - { cik: 768835, name: Big Lots, petition_year: 2024 }
+  - { cik: 1483510, name: Express, petition_year: 2024 }
