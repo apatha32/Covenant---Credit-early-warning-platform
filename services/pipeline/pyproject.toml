@@ -2,7 +2,11 @@
 name = "tripwire-pipeline"
 version = "0.1.0"
 requires-python = ">=3.12,<3.13"
-dependencies = ["tripwire-common"]
+dependencies = [
+    "pandera[polars]>=0.34.1",
+    "polars>=2.0.0",
+    "tripwire-common",
+]
 
 [tool.uv.sources]
 tripwire-common = { workspace = true }

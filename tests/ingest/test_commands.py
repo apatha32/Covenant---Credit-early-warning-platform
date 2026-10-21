@@ -14,10 +14,10 @@ import pytest
 from sec_fakes import FakeServer, columns, companyfacts, filing, submissions_main
 
 from tripwire_common.config import load_domain_pack
+from tripwire_common.raw import latest_cik_path
 from tripwire_common.settings import REPO_ROOT
 from tripwire_ingest import cli
 from tripwire_ingest.cli import Context
-from tripwire_ingest.landing import latest_cik_path
 
 pytestmark = pytest.mark.db
 

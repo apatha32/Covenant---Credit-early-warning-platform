@@ -135,6 +135,14 @@
 7. **Entity resolution:** CIK is the stable key, but tenants upload messy names/tickers. Match via ticker (exact) → normalized name (strip Inc/Corp/LLC/Ltd, punctuation, case) → fuzzy match (rapidfuzz) against current + former names → confidence score. Confidence < threshold → review queue. Human decisions are stored and reused.
 8. **Fiscal calendars:** Non-December fiscal years; align features on filing date, not calendar quarter.
 
+**Implementation notes (Phase 2, 2026-10-21):**
+- SEC's `fy`/`fp` on a companyfacts value describe the *filing*, not the value's own period (10-Ks repeat prior-year comparatives with the current `fy`/`fp`). Periods are therefore classified by length in days: Q 80–100, 6M YTD 172–193, 9M YTD 263–285, FY 350–380 (covers 52/53-week years).
+- Tag mapping lives in `config/domain/finance/metric_mapping.yaml` (25 metrics). Curated rows carry `mapping_version`; a mapping change is a new version and never collides with existing rows.
+- A derived quarter takes the filed date and accession of its *later* input and lists both inputs in `derivation`; it is re-derived when an input is restated, and never produced once the quarter is reported directly.
+- Every filing that reports a period is kept as a version (comparatives included); "restated" = value differs from the previous version.
+- Scale errors (#6) are flagged only when a value is 500–1500x off neighbors that agree with each other (spread ≤ 10x), so restatements after reverse mergers are not mistaken for scale slips.
+- `staging.facts` in Postgres holds only facts whose tag feeds a canonical metric (storage budget); the full raw set stays in Parquet.
+
 ---
 
 ## 5. Database (Supabase Postgres)

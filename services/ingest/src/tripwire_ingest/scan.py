@@ -8,16 +8,15 @@ as a data issue for a human to review. Nothing is fixed silently.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from io import BytesIO
 
 import polars as pl
 import psycopg
 from psycopg.types.json import Jsonb
 
 from tripwire_common.config import DevSample, DomainPack
+from tripwire_common.raw import latest_cik_path, read_parquet
+from tripwire_common.runs import RunLog
 from tripwire_common.storage import Storage
-from tripwire_ingest.landing import latest_cik_path
-from tripwire_ingest.runs import RunLog
 from tripwire_ingest.sec import cik10
 
 CURRENT_REPORT_FORMS = ("8-K", "8-K/A")
@@ -60,7 +59,7 @@ def _load_filings(conn: psycopg.Connection, storage: Storage, cik: str) -> pl.Da
     path = latest_cik_path(conn, "submissions", cik)
     if path is None:
         return None
-    return pl.read_parquet(BytesIO(storage.read_bytes(f"{path}/filings.parquet")))
+    return read_parquet(storage, f"{path}/filings.parquet")
 
 
 def spot_check(

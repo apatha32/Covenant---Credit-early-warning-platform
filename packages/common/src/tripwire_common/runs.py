@@ -1,4 +1,4 @@
-"""raw.ingest_runs bookkeeping: every run records its counts and outcome."""
+"""raw.ingest_runs bookkeeping: every ingest and pipeline run records its counts and outcome."""
 
 from __future__ import annotations
 
@@ -7,11 +7,29 @@ from collections import Counter
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from typing import Protocol
 
 import psycopg
 from psycopg.types.json import Jsonb
 
-from tripwire_ingest.http import HttpClient
+
+class _RequestStats(Protocol):
+    requests: int
+    retries: int
+
+
+class _RateMeter(Protocol):
+    max_per_second: int
+
+
+class MeteredClient(Protocol):
+    """Anything that counts its requests (e.g. tripwire_ingest.http.HttpClient)."""
+
+    @property
+    def stats(self) -> _RequestStats: ...
+    @property
+    def meter(self) -> _RateMeter: ...
+
 
 log = logging.getLogger(__name__)
 
@@ -37,7 +55,7 @@ class RunLog:
 
 @contextmanager
 def ingest_run(
-    conn: psycopg.Connection, source: str, clients: Sequence[HttpClient] = ()
+    conn: psycopg.Connection, source: str, clients: Sequence[MeteredClient] = ()
 ) -> Iterator[RunLog]:
     """Open a run row, yield its log, and close it as succeeded / partial / failed.
 

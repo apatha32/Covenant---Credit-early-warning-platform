@@ -8,9 +8,9 @@ import pytest
 from sec_fakes import FakeServer, filing, submissions_main
 
 from tripwire_common.config import DevSample, SampleCompany, load_domain_pack
+from tripwire_common.runs import ingest_run
 from tripwire_common.settings import REPO_ROOT
 from tripwire_ingest import cli
-from tripwire_ingest.runs import ingest_run
 from tripwire_ingest.sample import has_xbrl_history
 from tripwire_ingest.scan import item_hits, primary_event_items, render_report, spot_check
 from tripwire_ingest.sec import SubmissionsPayload, parse_submissions

@@ -1,0 +1,192 @@
+# Finance domain pack: canonical metrics <- XBRL tags.
+#
+# For each metric, tags are tried in order. Per company, period and filing, the first tag that
+# filing reports wins, and the chosen tag is recorded as lineage (curated.financial_metric.source_tag).
+#
+#   kind: duration  -> income statement / cash flow; quarterly values are derived from YTD
+#                      (Q2 = 6M - Q1, Q3 = 9M - 6M, Q4 = FY - 9M) when not reported directly.
+#   kind: instant   -> balance sheet, as of a period end.
+#   sign: multiply the reported value (1 = as reported, -1 = flip).
+#   scale_check: quarantine values ~1000x off neighboring periods (stable-size metrics only).
+#   formulas: fallbacks used only when no tag is reported for that period and filing:
+#             sum(plus) - sum(minus), all components from the same filing and period. The
+#             result is flagged is_derived with every component in `derivation`.
+#
+# Bump `version` whenever tags, order or signs change. Curated rows carry it as mapping_version,
+# so old and new mappings never mix.
+#
+# Known v1 limitation: a metric reported only as components (e.g. goods + services revenue with no
+# total, or current LTD + short-term borrowings with no DebtCurrent) resolves to the first
+# component tag and understates the total. Coverage report shows which tags were used.
+#
+# Tag order was checked against tag usage in the 205-company dev sample (2026-10-21).
+#
+# v2 (2026-10-21): total_liabilities formula fallback. 44 of 179 active dev-sample companies
+# report no Liabilities total, but all report LiabilitiesAndStockholdersEquity. Checked against
+# 16,393 periods where both are reported: formula == Liabilities exactly in 89%, within 2% in 94%.
+version: 2
+
+metrics:
+  # --- income statement (duration) ---
+  revenue:
+    scale_check: true
+    kind: duration
+    unit: USD
+    tags:
+      - us-gaap:Revenues
+      - us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax
+      - us-gaap:SalesRevenueNet
+      - us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax
+      - us-gaap:SalesRevenueGoodsNet
+      - us-gaap:SalesRevenueServicesNet
+  cost_of_revenue:
+    kind: duration
+    unit: USD
+    tags:
+      - us-gaap:CostOfRevenue
+      - us-gaap:CostOfGoodsAndServicesSold
+      - us-gaap:CostOfGoodsSold
+      - us-gaap:CostOfServices
+  gross_profit:
+    kind: duration
+    unit: USD
+    tags: [us-gaap:GrossProfit]
+  sga_expense:
+    kind: duration
+    unit: USD
+    tags:
+      - us-gaap:SellingGeneralAndAdministrativeExpense
+      - us-gaap:GeneralAndAdministrativeExpense
+  operating_income:
+    kind: duration
+    unit: USD
+    tags: [us-gaap:OperatingIncomeLoss]
+  interest_expense:
+    kind: duration
+    unit: USD
+    tags:
+      - us-gaap:InterestExpense
+      - us-gaap:InterestExpenseNonoperating
+      - us-gaap:InterestExpenseDebt
+      - us-gaap:InterestAndDebtExpense
+  pretax_income:
+    kind: duration
+    unit: USD
+    tags:
+      - us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest
+      - us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments
+  income_tax_expense:
+    kind: duration
+    unit: USD
+    tags: [us-gaap:IncomeTaxExpenseBenefit]
+  net_income:
+    kind: duration
+    unit: USD
+    tags:
+      - us-gaap:NetIncomeLoss
+      - us-gaap:ProfitLoss
+      - us-gaap:NetIncomeLossAvailableToCommonStockholdersBasic
+  depreciation_amortization:
+    kind: duration
+    unit: USD
+    tags:
+      - us-gaap:DepreciationDepletionAndAmortization
+      - us-gaap:DepreciationAndAmortization
+      - us-gaap:DepreciationAmortizationAndAccretionNet
+
+  # --- cash flow (duration; 10-Qs report these only year-to-date) ---
+  operating_cash_flow:
+    kind: duration
+    unit: USD
+    tags:
+      - us-gaap:NetCashProvidedByUsedInOperatingActivities
+      - us-gaap:NetCashProvidedByUsedInOperatingActivitiesContinuingOperations
+  capex:
+    kind: duration
+    unit: USD
+    tags:
+      - us-gaap:PaymentsToAcquirePropertyPlantAndEquipment
+      - us-gaap:PaymentsToAcquireProductiveAssets
+
+  # --- balance sheet (instant) ---
+  cash:
+    kind: instant
+    unit: USD
+    tags:
+      - us-gaap:CashAndCashEquivalentsAtCarryingValue
+      - us-gaap:CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents
+      - us-gaap:Cash
+  short_term_investments:
+    kind: instant
+    unit: USD
+    tags:
+      - us-gaap:ShortTermInvestments
+      - us-gaap:MarketableSecuritiesCurrent
+      - us-gaap:AvailableForSaleSecuritiesDebtSecuritiesCurrent
+  accounts_receivable:
+    kind: instant
+    unit: USD
+    tags:
+      - us-gaap:AccountsReceivableNetCurrent
+      - us-gaap:ReceivablesNetCurrent
+  inventory:
+    kind: instant
+    unit: USD
+    tags: [us-gaap:InventoryNet]
+  current_assets:
+    scale_check: true
+    kind: instant
+    unit: USD
+    tags: [us-gaap:AssetsCurrent]
+  total_assets:
+    scale_check: true
+    kind: instant
+    unit: USD
+    tags: [us-gaap:Assets]
+  accounts_payable:
+    kind: instant
+    unit: USD
+    tags:
+      - us-gaap:AccountsPayableCurrent
+      - us-gaap:AccountsPayableAndAccruedLiabilitiesCurrent
+  current_liabilities:
+    scale_check: true
+    kind: instant
+    unit: USD
+    tags: [us-gaap:LiabilitiesCurrent]
+  total_liabilities:
+    scale_check: true
+    kind: instant
+    unit: USD
+    tags: [us-gaap:Liabilities]
+    # Total equity incl. noncontrolling interest first, because the L&E total includes it.
+    # Mezzanine (temporary) equity, where present, ends up counted as a liability.
+    formulas:
+      - plus: [us-gaap:LiabilitiesAndStockholdersEquity]
+        minus: [us-gaap:StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest]
+      - plus: [us-gaap:LiabilitiesAndStockholdersEquity]
+        minus: [us-gaap:StockholdersEquity]
+  short_term_debt:
+    kind: instant
+    unit: USD
+    tags:
+      - us-gaap:DebtCurrent
+      - us-gaap:LongTermDebtCurrent
+      - us-gaap:ShortTermBorrowings
+  long_term_debt:
+    kind: instant
+    unit: USD
+    tags:
+      - us-gaap:LongTermDebtNoncurrent
+      - us-gaap:LongTermDebtAndCapitalLeaseObligations
+      - us-gaap:LongTermNotesPayable
+  retained_earnings:
+    kind: instant
+    unit: USD
+    tags: [us-gaap:RetainedEarningsAccumulatedDeficit]
+  stockholders_equity:
+    kind: instant
+    unit: USD
+    tags:
+      - us-gaap:StockholdersEquity
+      - us-gaap:StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest

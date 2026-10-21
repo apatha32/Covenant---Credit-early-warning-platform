@@ -102,9 +102,9 @@ def test_financial_metric_is_append_only(db: psycopg.Connection) -> None:
     db.execute(
         """insert into curated.financial_metric
              (cik, canonical_metric, period_type, period_end, unit, value, source_tag,
-              filed_date, accession, version)
+              filed_date, accession, version, mapping_version)
            values ('0000000001', 'revenue', 'FY', '2023-12-31', 'USD', 100,
-                   'us-gaap:Revenues', '2024-02-15', '0000000001-24-000001', 1)"""
+                   'us-gaap:Revenues', '2024-02-15', '0000000001-24-000001', 1, '1')"""
     )
     for stmt in (
         "update curated.financial_metric set value = 200",
@@ -118,9 +118,9 @@ def test_restatement_is_a_new_version(db: psycopg.Connection) -> None:
     _seed_company(db)
     insert = """insert into curated.financial_metric
              (cik, canonical_metric, period_type, period_end, unit, value, source_tag,
-              filed_date, accession, version)
+              filed_date, accession, version, mapping_version)
            values ('0000000001', 'revenue', 'FY', '2023-12-31', 'USD', %s,
-                   'us-gaap:Revenues', %s, %s, %s)"""
+                   'us-gaap:Revenues', %s, %s, %s, '1')"""
     db.execute(insert, [100, "2024-02-15", "0000000001-24-000001", 1])
     db.execute(insert, [90, "2024-08-01", "0000000001-24-000050", 2])
     # Reusing a version number for the same period is rejected.
@@ -134,9 +134,9 @@ def test_derived_metric_requires_lineage(db: psycopg.Connection) -> None:
         db.execute(
             """insert into curated.financial_metric
                  (cik, canonical_metric, period_type, period_end, unit, value, source_tag,
-                  is_derived, filed_date, accession, version)
+                  is_derived, filed_date, accession, version, mapping_version)
                values ('0000000001', 'revenue', 'Q', '2023-12-31', 'USD', 25,
-                       'us-gaap:Revenues', true, '2024-02-15', '0000000001-24-000001', 1)"""
+                       'us-gaap:Revenues', true, '2024-02-15', '0000000001-24-000001', 1, '1')"""
         )
 
 
