@@ -1,0 +1,23 @@
+borrower_name,ticker,expected_cik,case
+Hertz Corporation,,,subsidiary_not_in_universe
+Ford Motor Credit Company LLC,,,subsidiary_not_in_universe
+GM Financial,,,subsidiary_not_in_universe
+Wells Fargo Bank N.A.,,,subsidiary_not_in_universe
+American Airlines Inc,,,subsidiary_not_in_universe
+Ford Motor Credit Company LLC,F,,ticker_points_at_parent
+Hertz Corporation,HTZ,,ticker_points_at_parent
+Apple,,0000320193,short_name
+Amazon.com,,0001018724,short_name
+Revlon,,0000887921,short_name
+Delta Airlines,,0000027904,spacing_variant
+Chesapeake Energy,,0000895126,renamed_company
+Frontier Communications,,0000020520,renamed_company
+Spirit Airlines,,0001498710,renamed_company
+Rite Aid Corp,,0000084129,renamed_company
+Apple Hospitality,,0001418121,namesake_of_bigger_company
+Frontier Airlines,,0001670076,brand_of_listed_parent
+Party City,,0001592058,brand_of_listed_parent
+Google,,0001652044,old_brand_not_in_aliases
+Facebook Inc,,0001326801,old_brand_not_in_aliases
+Meta,,0001326801,short_name
+Dell Inc,,,predecessor_not_in_universe

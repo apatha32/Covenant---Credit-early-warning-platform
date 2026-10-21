@@ -132,7 +132,7 @@
 4. **Restatements / amendments:** The same period is reported multiple times. Keep ALL versions (bitemporal: `period_end` + `filed_date`). Never overwrite.
 5. **Point-in-time correctness (critical):** Every feature for as-of date T may only use facts with `filed_date <= T`. Write an explicit test that fails if any feature uses future-filed data. Leakage invalidates the whole model.
 6. **Units & scale:** USD vs shares vs pure; reject or convert non-USD; detect obvious scale errors (values off by ~1000x versus neighbors) → quarantine.
-7. **Entity resolution:** CIK is the stable key, but tenants upload messy names/tickers. Match via ticker (exact) → normalized name (strip Inc/Corp/LLC/Ltd, punctuation, case) → fuzzy match (rapidfuzz) against current + former names → confidence score. Confidence < threshold → review queue. Human decisions are stored and reused.
+7. **Entity resolution:** CIK is the stable key, but tenants upload messy names/tickers. Match via ticker (exact) → normalized name (strip Inc/Corp/LLC/Ltd, punctuation, case) → fuzzy match (rapidfuzz) against current + former names → confidence score. Confidence < threshold → review queue. Human decisions are stored and reused. *(Phase 3: decisions are stored per tenant in `app.entity_alias`, never in the shared `curated.company_alias`, so one tenant's borrower names are never visible to or reused for another. A ticker whose company disagrees with the uploaded name is a conflict and goes to review.)*
 8. **Fiscal calendars:** Non-December fiscal years; align features on filing date, not calendar quarter.
 
 **Implementation notes (Phase 2, 2026-10-21):**

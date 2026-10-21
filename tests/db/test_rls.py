@@ -30,6 +30,7 @@ APP_TABLES = {
     "alert": "tenant_id",
     "disposition": "tenant_id",
     "audit_log": "tenant_id",
+    "entity_alias": "tenant_id",
 }
 
 
@@ -97,6 +98,11 @@ def _seed_tenant(conn: psycopg.Connection, name: str, member: uuid.UUID) -> Tena
     conn.execute(
         "insert into app.audit_log (tenant_id, actor_user_id, action) values (%s, %s, 'seed')",
         [tenant_id, member],
+    )
+    conn.execute(
+        """insert into app.entity_alias (tenant_id, input_key, cik, decision, decided_by)
+           values (%s, 'apple|', %s, 'accept', %s)""",
+        [tenant_id, CIK, member],
     )
     return TenantRows(tenant_id, portfolio_id, borrower_id, alert_id)
 
@@ -359,3 +365,18 @@ def test_analyst_cannot_manage_membership(db: psycopg.Connection, world: World) 
             "insert into app.membership (user_id, tenant_id, role) values (%s, %s, 'viewer')",
             [world.nobody, world.a.tenant_id],
         )
+
+
+def test_cannot_record_match_decision_for_other_tenant_or_as_someone_else(
+    db: psycopg.Connection, world: World
+) -> None:
+    insert = """insert into app.entity_alias (tenant_id, input_key, cik, decision, decided_by)
+                values (%s, 'x|', %s, 'accept', %s)"""
+    with acting_as(db, world.alice), denied(db):
+        db.execute(insert, [world.b.tenant_id, CIK, world.alice])
+    with acting_as(db, world.alice), denied(db):
+        db.execute(insert, [world.a.tenant_id, CIK, world.victor])
+    with acting_as(db, world.victor), denied(db):  # viewers cannot decide
+        db.execute(insert, [world.a.tenant_id, CIK, world.victor])
+    with acting_as(db, world.alice):
+        db.execute(insert, [world.a.tenant_id, CIK, world.alice])

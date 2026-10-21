@@ -1,0 +1,101 @@
+borrower_name,ticker,expected_cik,case
+Stark Novus Financial Inc. (formerly Lordstown Motors Corp.),,0001759546,formerly_pattern
+Sunrise Bakery Holdings LLC,,,not_an_sec_company
+"Blackstone Real Esstate Income Trust, Inc.",BSTT,0001662972,typo_with_ticker
+DORIAN LPG LTD.,LPG,0001596993,exact_name_and_ticker
+GLLOBUS MEDICAL INC,GMED,0001237831,typo_with_ticker
+Currenc Grup Icn.,,0001862935,typo_no_ticker
+Mixue Bingcheng Co Ltd/ADR,MXUBY,0002061911,exact_name_and_ticker
+Sanntander Bank Polska SAA/ADR,,0001459334,typo_no_ticker
+FIRSTSUN CAPITAL BANCORP,ZZXJ,0001709442,unknown_ticker
+OSR HEALTH INC.,,0001840425,name_variant
+Neostellar Capital Corp.,NSLR,0001509470,exact_name_and_ticker
+"Bankwell Financial Group, Inc.",BWFG,0001505732,exact_name_and_ticker
+nft limited,,0001958713,name_variant
+,AMSS,0001851491,ticker_only
+Enertopia Corp. (formerly Golden Aria Corp.),,0001346022,formerly_pattern
+CENOVUS ENERY INC.,,0001475260,typo_no_ticker
+ATRennew Inc.,,0001838957,typo_no_ticker
+"EXP OldCo Winddown, Inc. (formerly EXPRESS, INC.)",,0001483510,formerly_pattern
+,PPBT,0001614744,ticker_only
+"Innoviva, Inc. (formerly THERAVANCE INC)",,0001080014,formerly_pattern
+"CHAMPIONS ONCOLOGY, INC.",NYSE: csbr,0000771856,messy_ticker_format
+"Blue Line Holdinns, Inc.",,0002029586,typo_no_ticker
+NRC HAELTH,NRC,0000070487,typo_with_ticker
+TANTECH Hldgs LTD,,0001588084,abbreviated
+Texas Pacific Land Corp,ZZXQ,0001811074,unknown_ticker
+MERCNATILE BANK CORP,,0001042729,typo_no_ticker
+  Sbo Ag/Adr ,,0001578955,name_variant
+FAMILY STEAK HOUSES OF FLORIDA INC,,0000784539,former_name
+WHITING PETROLEUM HOLDINGS INC,,0001255474,former_name
+,GNK,0001326200,ticker_only
+Wearable Devices Limited,,0001887673,name_variant
+Maple Leaf Daycare Centers,,,not_an_sec_company
+Giant Oak Acquisiion Corp,,0001858939,typo_no_ticker
+,MIAC,0002136530,ticker_only
+  Oconee Financial Corp ,,0001076691,name_variant
+Versus Sys Inc.,,0001701963,abbreviated
+,ALLR,0001860657,ticker_only
+sprott physical gold trust,,0001477049,name_variant
+Eaton Vance Floating-Rate Income Trust,ZZJJ,0001288992,unknown_ticker
+GH RESEARCH PLC,$GHRS,0001855129,messy_ticker_format
+"FVCBankcorp, Inc.",FVCB,0001675644,exact_name_and_ticker
+"ZONED PROPERTIES, INC.",NYSE: zdpy,0001279620,messy_ticker_format
+INCOME OPPORTUNITY REALTY INVESTORS INC /TX/,IOR,0000949961,exact_name_and_ticker
+Desert Bloom Nurseries,,,not_an_sec_company
+Dole plc,DOLE,0001857475,exact_name_and_ticker
+UNITEDHEALTH GROrP INC,,0000731766,typo_no_ticker
+Patel & Sons Hospitality,,,not_an_sec_company
+"Glucose Health, Inc.",EXFY,0001420108,wrong_ticker
+The exicure inc.,,0001698530,name_variant
+VISTA GOLD CROP,,0000783324,typo_no_ticker
+Pluri Inc. (formerly AI SOFTWARE INC),,0001158780,formerly_pattern
+MOHAWK INDUSTRIES INC,MAC,0000851968,wrong_ticker
+"BLACKROCK MUNIHldgs NEW JERSEY QUALITY FUND, INC.",,0001053988,abbreviated
+Research Alliance Corp III,CIRX,0002118032,wrong_ticker
+"VITESSE ENERGY, INC.",NASDAQ:VTS,0001944558,messy_ticker_format
+KRONOS ADVANCED Tech INC,,0001108248,abbreviated
+AGNIICO EGLE MINES LTD,,0000002809,typo_no_ticker
+MONOLITHIC SYSTEM TECHNOLOGY INC,,0000890394,former_name
+kontoor brands inc.,,0001760965,name_variant
+universal technical institute inc,,0001261654,name_variant
+,OPY,0000791963,ticker_only
+  Powercompute Inc. ,,0001640384,name_variant
+"Black Ridge Oil & Gas, Inc.",,0001490161,former_name
+Legence Corp.,WHWK,0002052568,wrong_ticker
+PARAMETRIC TECHNOLOGY CORP,,0000857005,former_name
+"Blaize Hldgs, Inc.",,0001871638,abbreviated
+UNIVESRITY BANCORP INC /DE/,,0000811211,typo_no_ticker
+YELP! INC,,0001345016,former_name
+,HMH,0002021880,ticker_only
+reAlpha Tect Corp.,,0001859199,typo_no_ticker
+,GMZP,0001973160,ticker_only
+Ironwood Fabrication Ltd,,,not_an_sec_company
+AMERICAN FINANCIAL GRsUP INC,AFG,0001042046,typo_with_ticker
+start today co. ltd./adr,,0001679920,name_variant
+WEALTHFRONT CORP,ZZJQ,0001524566,unknown_ticker
+NIPPON TELEGRAPH & TELEPHONE CORP,,0000769594,name_variant
+Poenix New Media Ltd,FENG,0001509646,typo_with_ticker
+,TH,0001712189,ticker_only
+Star Integratai Ltd,,0002099952,typo_no_ticker
+,META,0001326801,ticker_only
+CRAWFORD & CO,MBIN,0000025475,wrong_ticker
+"Hertz Rental Car Holding Company, Inc.",,0001657853,former_name
+Pinecrest Pediatrics PC,,,not_an_sec_company
+Western Asset Mortgage Opportunity Fund Incorporated,,0001478102,name_variant
+PRINCETON CAPITAL CORP,PIAC,0000845385,exact_name_and_ticker
+PEOPLES BANCORP INC,NASDAQ:PEBO,0000318300,messy_ticker_format
+Silver Creek Dairy Farms,,,not_an_sec_company
+Brightline Auto Body Inc,,,not_an_sec_company
+Harborview Marine Supply LLC,,,not_an_sec_company
+Cedar Ridge Golf Club LLC,,,not_an_sec_company
+"  The everus construction group, incorporated ",,0002015845,name_variant
+SEMPRA,SRE,0001032208,exact_name_and_ticker
+TORON INC.,,0001484674,former_name
+"Eos Energy Enterprises, Incorporated",,0001805077,name_variant
+LABOR READY INC,,0000768899,former_name
+Zeo Energy Corp.,ZEO,0001865506,exact_name_and_ticker
+Dualitty Biotherapeutics Inc/ADR,,0002085208,typo_no_ticker
+TOLL BROTHERS INC,,0000794170,former_name
+"Chicago Atlantic Real Estate Finance, Itc.",,0001867949,typo_no_ticker
+"ImageneBio, Inc.",ZZQX,0001835579,unknown_ticker
