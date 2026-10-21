@@ -1,6 +1,8 @@
 <div align="center">
 
-# Tripwire
+# Covenant
+
+### Credit Early Warning Platform
 
 **Credit early-warning platform for lenders: messy SEC filings in, explainable 12-month distress alerts out.**
 
@@ -13,7 +15,7 @@
 ## What it does
 
 A credit team at a private-credit fund or mid-market lender uploads its borrower list, often a messy spreadsheet of names
-and maybe tickers. Tripwire:
+and maybe tickers. Covenant:
 
 1. **Resolves each borrower to its SEC entity.** Uncertain matches go to a human review queue
    instead of being guessed.

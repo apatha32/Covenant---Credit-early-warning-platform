@@ -1,8 +1,8 @@
-# TRIPWIRE — Credit Early Warning Platform
+# COVENANT — Credit Early Warning Platform
 
 > Build spec for Claude Code. Build phase by phase. Do not start a phase until the previous phase's acceptance criteria pass.
 
-**Repo:** `tripwire`
+**Repo:** `Covenant---Credit-early-warning-platform` (product name: Covenant; Python packages keep the internal `tripwire_*` names)
 **One-liner:** Messy SEC filings in, explainable 12-month distress alerts out. Point-in-time data pipeline, entity resolution, LightGBM + LLM risk signals, multi-tenant analyst console.
 
 ---
@@ -268,7 +268,7 @@ Auth: verify the Supabase JWT and enforce tenant scope server-side (in addition 
 ## 13. Repo layout
 
 ```
-tripwire/
+Covenant---Credit-early-warning-platform/
   SPEC.md
   README.md
   .env.example
