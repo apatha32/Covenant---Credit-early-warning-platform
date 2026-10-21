@@ -29,6 +29,7 @@ from tripwire_common.config import (
 )
 from tripwire_common.db import connect
 from tripwire_common.logging import configure_logging
+from tripwire_common.runs import ingest_run
 from tripwire_common.settings import REPO_ROOT, Settings, get_settings
 from tripwire_common.storage import Storage, get_storage
 from tripwire_ingest.company import upsert_from_submissions, upsert_from_tickers
@@ -40,7 +41,6 @@ from tripwire_ingest.landing import (
     land_submissions,
     land_tickers,
 )
-from tripwire_ingest.runs import ingest_run
 from tripwire_ingest.sample import build_dev_sample, write_dev_sample
 from tripwire_ingest.scan import primary_event_items, render_report, spot_check
 from tripwire_ingest.sec import (

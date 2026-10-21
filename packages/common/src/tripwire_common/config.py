@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -148,6 +148,79 @@ class KnownBankruptcies(_Strict):
     companies: list[KnownBankruptcy]
 
 
+class MetricFormula(_Strict):
+    """Fallback when no tag is reported: sum(plus) - sum(minus), all from the same filing and
+    period. Every component must be present, or the formula is not used."""
+
+    plus: list[str] = Field(min_length=1)
+    minus: list[str] = Field(default_factory=list)
+
+    def tags(self) -> list[str]:
+        return [*self.plus, *self.minus]
+
+    def describe(self) -> str:
+        return (
+            " - ".join([" + ".join(self.plus), *self.minus])
+            if self.minus
+            else " + ".join(self.plus)
+        )
+
+
+class MetricSpec(_Strict):
+    kind: Literal["duration", "instant"]
+    unit: str
+    sign: Literal[1, -1] = 1
+    # Quarantine values ~1000x off the company's neighboring periods (likely scale errors).
+    # Only for metrics whose size is stable; net income or cash can legitimately swing by 1000x.
+    scale_check: bool = False
+    tags: list[str] = Field(min_length=1)
+    formulas: list[MetricFormula] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _qualified_unique_tags(self) -> MetricSpec:
+        for tag in [*self.tags, *(t for f in self.formulas for t in f.tags())]:
+            if tag.count(":") != 1:
+                raise ValueError(f"tag {tag!r} must be 'taxonomy:Tag'")
+        if len(set(self.tags)) != len(self.tags):
+            raise ValueError(f"duplicate tags in {self.tags}")
+        return self
+
+    def priority(self, taxonomy: str, tag: str) -> int | None:
+        """Position of taxonomy:tag in this metric's list (0 = preferred), or None."""
+        try:
+            return self.tags.index(f"{taxonomy}:{tag}")
+        except ValueError:
+            return None
+
+
+class MetricMapping(_Strict):
+    version: int
+    metrics: dict[str, MetricSpec] = Field(min_length=1)
+
+    @property
+    def mapping_version(self) -> str:
+        return str(self.version)
+
+    def staged_tags(self) -> dict[tuple[str, str], str]:
+        """(taxonomy, tag) -> expected unit, for every tag a metric or formula reads."""
+        units: dict[tuple[str, str], str] = {}
+        for spec in self.metrics.values():
+            for qualified in [*spec.tags, *(t for f in spec.formulas for t in f.tags())]:
+                taxonomy, tag = qualified.split(":")
+                if units.setdefault((taxonomy, tag), spec.unit) != spec.unit:
+                    raise ValueError(f"{qualified} is used with two different units")
+        return units
+
+    def tag_index(self) -> dict[tuple[str, str], list[tuple[str, int]]]:
+        """(taxonomy, tag) -> [(metric, priority), ...]. A tag may feed more than one metric."""
+        index: dict[tuple[str, str], list[tuple[str, int]]] = {}
+        for name, spec in self.metrics.items():
+            for priority, qualified in enumerate(spec.tags):
+                taxonomy, tag = qualified.split(":")
+                index.setdefault((taxonomy, tag), []).append((name, priority))
+        return index
+
+
 class DomainPack(_Strict):
     name: str
     directory: Path
@@ -156,6 +229,7 @@ class DomainPack(_Strict):
     labels: Labels
     macro: MacroSeries
     known_bankruptcies: KnownBankruptcies
+    metrics: MetricMapping
 
     @model_validator(mode="after")
     def _label_events_exist(self) -> DomainPack:
@@ -197,6 +271,7 @@ def load_domain_pack(name: str | None = None, config_dir: Path | None = None) ->
         known_bankruptcies=KnownBankruptcies.model_validate(
             _read_yaml(pack_dir / "known_bankruptcies.yaml")
         ),
+        metrics=MetricMapping.model_validate(_read_yaml(pack_dir / "metric_mapping.yaml")),
     )
 
 

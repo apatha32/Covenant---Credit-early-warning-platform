@@ -17,11 +17,11 @@ import psycopg
 import yaml
 
 from tripwire_common.config import DevSample, DomainPack, SampleCompany, SecSourceConfig
+from tripwire_common.runs import RunLog
 from tripwire_common.storage import Storage
 from tripwire_ingest.company import upsert_from_submissions
 from tripwire_ingest.http import HttpClient
 from tripwire_ingest.landing import land_submissions
-from tripwire_ingest.runs import RunLog
 from tripwire_ingest.sec import cik10, fetch_submissions
 
 log = logging.getLogger(__name__)

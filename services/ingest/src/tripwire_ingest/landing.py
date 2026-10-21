@@ -12,9 +12,9 @@ import polars as pl
 import psycopg
 from psycopg import sql
 
+from tripwire_common.runs import RunLog
 from tripwire_common.storage import Storage
 from tripwire_ingest.fred import FredPayload, parse_series
-from tripwire_ingest.runs import RunLog
 from tripwire_ingest.sec import (
     RawPayload,
     SubmissionsPayload,
@@ -131,14 +131,3 @@ def land_fred_series(
 ) -> Landed:
     frame = parse_series(payload)
     return _land_source_file(conn, storage, "fred", payload.series_id, payload.checksum, frame, run)
-
-
-def latest_cik_path(conn: psycopg.Connection, kind: str, cik: str) -> str | None:
-    table = sql.Identifier("raw", _CIK_INDEXES[kind])
-    row = conn.execute(
-        sql.SQL(
-            "select storage_path from {} where cik = %s order by fetched_at desc, id desc limit 1"
-        ).format(table),
-        [cik],
-    ).fetchone()
-    return str(row[0]) if row else None

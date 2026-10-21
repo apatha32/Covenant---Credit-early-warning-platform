@@ -3,14 +3,15 @@
 Messy SEC filings in, explainable 12-month distress alerts out. See [SPEC.md](SPEC.md) for the
 full build spec and phase plan.
 
-**Status:** Phases 0 (foundations) and 1 (ingestion) complete. Cleaning & canonical model (Phase 2) is next.
+**Status:** Phases 0–2 complete (foundations, ingestion, canonical model). Entity resolution (Phase 3) is next.
 
 ## Layout
 
 ```
 packages/common/     tripwire_common: settings (env), YAML config loaders, JSON logging, DB helpers
 services/ingest/     SEC + FRED clients, rate limiter, raw Parquet landing, dev sample, Item 1.03 scan
-services/            pipeline, ml, llm, api: one uv workspace member each (empty until their phase)
+services/pipeline/   raw -> staging -> curated: tag mapping, YTD derivation, versions, events
+services/            ml, llm, api: one uv workspace member each (empty until their phase)
 supabase/migrations/ schema + RLS, applied by the Supabase CLI
 supabase/local/      supabase_shim.sql: Supabase roles + auth.uid() for plain-Postgres dev/tests
 config/              models.yaml (LLM/ML settings) and domain/finance/ (the finance domain pack)
@@ -52,6 +53,21 @@ uv run python -m tripwire_ingest --help     # individual commands
   every re-run ingests the same 205 companies.
 - **Item 1.03 scan:** `reports/item_103_spotcheck.md` (generated) plus
   `reports/item_103_review.md` (manual review). Issues are logged to `staging.quarantine`.
+
+## Pipeline (Phase 2)
+
+```sh
+uv run python -m tripwire_pipeline all      # staging, curated, events, coverage report
+```
+
+- **Staging:** mapped XBRL facts typed into `staging.facts`; rule violations (non-USD unit, bad
+  dates, conflicting duplicates, ...) go to `staging.quarantine`. Output checked by a Pandera contract.
+- **Curated:** `curated.financial_metric`, 25 canonical metrics from `metric_mapping.yaml`, with
+  the chosen tag, every version, and YTD-derived quarters (lineage in `derivation`).
+- **Point in time:** `select * from curated.financial_metric_as_of('2024-02-20', '1')` returns
+  each metric as known on that date. Features must read through it.
+- **Events:** `curated.filing_event` from 8-K items and NT 10-K / NT 10-Q.
+- **Coverage:** `reports/metric_coverage.md`.
 
 Against a real Supabase stack instead of the shim: `supabase db start` (database only) or
 `supabase start` (full local stack), then `supabase db push` to deploy to a linked project.
