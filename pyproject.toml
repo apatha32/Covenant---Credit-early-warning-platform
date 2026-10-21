@@ -63,6 +63,7 @@ mypy_path = [
     "services/api/src",
     "tests/ingest",
     "tests/pipeline",
+    "tests/entity",
 ]
 
 [tool.pytest.ini_options]

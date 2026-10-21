@@ -1,0 +1,101 @@
+borrower_name,ticker,expected_cik,case
+,RMR,0001644378,ticker_only
+Northgate Veterinary Clinics,,,not_an_sec_company
+Touchstone Mining LTD,,0001347858,former_name
+Exacsale Labs Holdngs Inc.,,0002109869,typo_no_ticker
+  The Hsbc Holdings Plc ,,0001089113,name_variant
+NEXTBOAT INC.,NASDAQ:NXB,0002067767,messy_ticker_format
+RAM ENERGY RESOURCES INC,,0001282648,former_name
+PMGC Hldgs Inc.,,0001840563,abbreviated
+"DigiPath,Inc.",,0001502966,former_name
+"Bio Green Med Solution, Inc. (formerly Cyclacel Pharmaceuticals, Inc.)",,0001130166,formerly_pattern
+,GEMI,0002055592,ticker_only
+"Avibdank Holdingi, Inc.",AVBH,0001443575,typo_with_ticker
+Guardian Metal Resources PLC,GMTL,0002039972,exact_name_and_ticker
+PCB BANCORP,,0001423869,name_variant
+"EUROPEeN EQUITY FND, INC / MD",,0000791718,typo_no_ticker
+MASS MEGAAWTTS WIND POWER INC,,0001117228,typo_no_ticker
+aersale corporation,,0001754170,name_variant
+Harborview Marine Supply LLC,,,not_an_sec_company
+"Pursuit Attractions & Hospitality, Inc. (formerly VIAD CORP)",,0000884219,formerly_pattern
+KRAKacuisition Corp,,0002082119,typo_no_ticker
+  beam global ,,0001398805,name_variant
+Brightline Auto Body Inc,,,not_an_sec_company
+RuGIS CORRP,,0000716643,typo_no_ticker
+ACRESS Commercial Raelty Corp.,,0001332551,typo_no_ticker
+Maple Leaf Daycare Centers,,,not_an_sec_company
+WIRELESS RONIN TECHNOLOGIES INC,,0001356093,former_name
+"Weve Communicatians, Inc.",,0001609151,typo_no_ticker
+,DSRNY,0001544088,ticker_only
+ANNALY CAPInAL MANAGrMENT INC,NLY,0001043219,typo_with_ticker
+"V2X, Inc.",PI,0001601548,wrong_ticker
+NOVO NORDISK A S,,0000353278,name_variant
+,GVAC,0002123380,ticker_only
+The Pimco California Municipal Income Fund,,0001140411,name_variant
+The PUMA BIOTECHNOLOGY INC.,,0001401667,name_variant
+EAGLE BANCORP INC,ZZJX,0001050441,unknown_ticker
+,TWFG,0002007596,ticker_only
+Ironwood Fabrication Ltd,,,not_an_sec_company
+PRIMEENERGY CORP,,0000056868,former_name
+Core Laboatories Inc. /DE/,CLB,0001958086,typo_with_ticker
+Sunrise Bakery Holdings LLC,,,not_an_sec_company
+DUPONT E I DE NEMOURS & CO,,0000030554,former_name
+URANIUM RESOURCES INC /DE/,,0000839470,former_name
+BCB BANCORP INC,ZZXJ,0001228454,unknown_ticker
+Sunoco LP,ZZQJ,0001552275,unknown_ticker
+"canton strategic holdings, incorporated",,0001861657,name_variant
+KEYCORP /NEW/,BDSX,0000091576,wrong_ticker
+"NEW RITE AID, LLC (formerly RITE AID CORP)",,0000084129,formerly_pattern
+Pinecrest Pediatrics PC,,,not_an_sec_company
+ISA INVESTMENTS & REPRESENTATIONS INC,,0000933267,typo_no_ticker
+FORRESTER RESEARCH INC,,0001023313,former_name
+Pantheon Resources plc,PTHRF,0001621910,exact_name_and_ticker
+"Caring Brands, Inc.",DMAC,0002020737,wrong_ticker
+J C PENNEY CO INC,,0001166126,former_name
+Jefferies Financial Grp Inc.,,0000096223,abbreviated
+,GILD,0000882095,ticker_only
+"PARKE BANCORP, INC.",PKBK,0001315399,exact_name_and_ticker
+,BKE,0000885245,ticker_only
+Lakeshore Printing Company,,,not_an_sec_company
+  veradermics inc ,,0001827635,name_variant
+"MERCER BANCORP, INC.",$MSBB,0001967306,messy_ticker_format
+"MAIA Biotechnology, Inc.",MAIA,0001878313,exact_name_and_ticker
+RELX PLC, relx ,0000929869,messy_ticker_format
+"Microvast Holings, Inc.",,0001760689,typo_no_ticker
+"STARGUIDE Grp, INC.",,0001803096,abbreviated
+"ServiceNow, Inc.",NOW,0001373715,exact_name_and_ticker
+"TAYSHA GENE THERAPIES, INC.",NASDAQ:TSHA,0001806310,messy_ticker_format
+The CALIFORNIA WATER SERVICE GROUP,,0001035201,name_variant
+DarioHealth Corp.,NCO,0001533998,wrong_ticker
+TCW STRATEGIC INCOME FUND INC,CBMJ,0000809559,wrong_ticker
+CATHAY GENERAL BANCORP,,0000861842,name_variant
+"LIBERTY DEFENSE HOLDINGS, LTD.",DETX,0001919776,exact_name_and_ticker
+Strategy Ic,MSTR,0001050446,typo_with_ticker
+"Astera Lbs, Inc.",,0001736297,typo_no_ticker
+Bravo Miinng Corp.,,0001913288,typo_no_ticker
+Lanvan Group Holdings Ltdd,,0001922097,typo_no_ticker
+atour lifestyle holdings limited,,0001853717,name_variant
+"Vistance Networks, Inc. (formerly CommScope Holding Company, Inc.)",,0001517228,formerly_pattern
+Western Asset Investment Grade Income Fund Inc.,PAI,0000075398,exact_name_and_ticker
+Cedar Ridge Golf Club LLC,,,not_an_sec_company
+"Guerrilla RF, Inc.",ZZJQ,0001832487,unknown_ticker
+CHDT CORP,,0000814926,former_name
+Copperfield Craft Brewing Co,,,not_an_sec_company
+,HCPC,0002050020,ticker_only
+VERNAL CAPITAL ACQUISITION CORP.,$VECA,0002081690,messy_ticker_format
+FIRST MAlESTIC SILVER CORP,,0001308648,typo_no_ticker
+MASTERBEEF GROUP,MB,0002027265,exact_name_and_ticker
+SILVER SPRUCE RESOURCES INC.,,0001771039,name_variant
+"Nuvera Communications, Inc. (formerly NEW ULM TELECOM INC)",,0000071557,formerly_pattern
+WABASl NATIONAL Corp,,0000879526,typo_no_ticker
+BuildDirect.com Tech Inc.,,0001576159,abbreviated
+Principal Real Estate Income Fund,ZZQJ,0001557523,unknown_ticker
+,LCII,0000763744,ticker_only
+WF Holding Ltd,WFF,0001980210,exact_name_and_ticker
+  Dynamic Aerospace Systems Corporation ,,0001854526,name_variant
+Calaos Dynamci Convertible & Income Fund,CCD,0001602584,typo_with_ticker
+FOCUS UNIVERSAL INC.,FCUV,0001590418,exact_name_and_ticker
+,TRAW,0001130598,ticker_only
+OLD SECOND BANCORP INC,,0000357173,name_variant
+"HELIOS TECHNOLOlIES, IC.",,0001024795,typo_no_ticker
+SIGA Tech INC,,0001010086,abbreviated

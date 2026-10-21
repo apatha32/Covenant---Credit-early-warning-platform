@@ -1,0 +1,49 @@
+# Entity resolution: borrower upload rows -> SEC companies (CIK). Domain-agnostic engine settings.
+#
+# Confidence is in [0, 1]. A row is auto-matched only at or above auto_match_min_confidence;
+# everything else goes to the human review queue with its top candidates.
+# Thresholds were set on tests/entity/fixtures/borrowers_tune.csv only; the hold-out file
+# (borrowers_holdout.csv) is the acceptance test and was never used for tuning.
+version: 1
+
+auto_match_min_confidence: 0.90
+max_candidates: 5
+max_upload_rows: 5000
+
+confidence:
+  prior_decision: 1.00        # a human already decided this exact input for this tenant
+  ticker_and_name: 0.99       # ticker exact, and the name agrees
+  exact_name: 0.97            # normalized name equals the company's current name
+  exact_former_name: 0.93     # ... equals a former name (renamed company)
+  ticker_only: 0.92           # ticker exact, no name given
+  ticker_name_conflict: 0.50  # ticker points at one company, the name at another
+  ambiguous_name: 0.60        # normalized name shared by several companies
+
+# Ticker matches: the uploaded name must be at least this similar (0-100) to one of the
+# ticker company's names to count as agreeing.
+ticker_name_agree_score: 80
+
+# Fuzzy name matches (rapidfuzz token_sort_ratio, 0-100): confidence = score / 100, capped at
+# fuzzy_ambiguous_cap when the runner-up company scores within fuzzy_min_gap points.
+fuzzy_min_gap: 4
+fuzzy_ambiguous_cap: 0.75
+
+# Token expansions applied after legal-suffix stripping (both sides are normalized the same way).
+abbreviations:
+  intl: international
+  int'l: international
+  natl: national
+  mfg: manufacturing
+  svcs: services
+  svc: services
+  sys: systems
+  tech: technologies
+  hldgs: holdings
+  hldg: holding
+  grp: group
+  pharm: pharmaceuticals
+  pharma: pharmaceuticals
+  bancorp: bancorporation
+  ctrs: centers
+  amer: american
+  n.a.: na

@@ -345,3 +345,43 @@ def dev_sample_path(pack: DomainPack) -> Path:
 
 def load_dev_sample(pack: DomainPack) -> DevSample:
     return DevSample.model_validate(_read_yaml(dev_sample_path(pack)))
+
+
+# --- config/entity_resolution.yaml ---
+
+
+class MatchConfidence(_Strict):
+    prior_decision: float = Field(ge=0, le=1)
+    ticker_and_name: float = Field(ge=0, le=1)
+    exact_name: float = Field(ge=0, le=1)
+    exact_former_name: float = Field(ge=0, le=1)
+    ticker_only: float = Field(ge=0, le=1)
+    ticker_name_conflict: float = Field(ge=0, le=1)
+    ambiguous_name: float = Field(ge=0, le=1)
+
+
+class EntityResolutionConfig(_Strict):
+    version: int
+    auto_match_min_confidence: float = Field(gt=0, le=1)
+    max_candidates: int = Field(ge=1)
+    max_upload_rows: int = Field(ge=1)
+    confidence: MatchConfidence
+    ticker_name_agree_score: float = Field(ge=0, le=100)
+    fuzzy_min_gap: float = Field(ge=0, le=100)
+    fuzzy_ambiguous_cap: float = Field(ge=0, le=1)
+    abbreviations: dict[str, str] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _review_paths_stay_below_auto_match(self) -> EntityResolutionConfig:
+        # Conflicts and ambiguity must always reach a human.
+        for name in ("ticker_name_conflict", "ambiguous_name"):
+            if getattr(self.confidence, name) >= self.auto_match_min_confidence:
+                raise ValueError(f"confidence.{name} must be below auto_match_min_confidence")
+        if self.fuzzy_ambiguous_cap >= self.auto_match_min_confidence:
+            raise ValueError("fuzzy_ambiguous_cap must be below auto_match_min_confidence")
+        return self
+
+
+def load_entity_resolution_config(config_dir: Path | None = None) -> EntityResolutionConfig:
+    config_dir = config_dir or get_settings().tripwire_config_dir
+    return EntityResolutionConfig.model_validate(_read_yaml(config_dir / "entity_resolution.yaml"))

@@ -3,14 +3,15 @@
 Messy SEC filings in, explainable 12-month distress alerts out. See [SPEC.md](SPEC.md) for the
 full build spec and phase plan.
 
-**Status:** Phases 0–2 complete (foundations, ingestion, canonical model). Entity resolution (Phase 3) is next.
+**Status:** Phases 0–3 complete (foundations, ingestion, canonical model, entity resolution). Features, labels & models (Phase 4) are next.
 
 ## Layout
 
 ```
 packages/common/     tripwire_common: settings (env), YAML config loaders, JSON logging, DB helpers
 services/ingest/     SEC + FRED clients, rate limiter, raw Parquet landing, dev sample, Item 1.03 scan
-services/pipeline/   raw -> staging -> curated: tag mapping, YTD derivation, versions, events
+services/pipeline/   raw -> staging -> curated (tag mapping, YTD derivation, versions, events);
+                     entity/ = borrower upload, matching cascade, review queue
 services/            ml, llm, api: one uv workspace member each (empty until their phase)
 supabase/migrations/ schema + RLS, applied by the Supabase CLI
 supabase/local/      supabase_shim.sql: Supabase roles + auth.uid() for plain-Postgres dev/tests
@@ -69,6 +70,21 @@ uv run python -m tripwire_pipeline all      # staging, curated, events, coverage
 - **Events:** `curated.filing_event` from 8-K items and NT 10-K / NT 10-Q.
 - **Coverage:** `reports/metric_coverage.md`.
 
+## Entity resolution (Phase 3)
+
+`tripwire_pipeline.entity` turns an uploaded borrower CSV into SEC companies:
+
+- **Columns:** found by header (`name` / `company` / `borrower_name` …, `ticker` / `symbol` …).
+  Extra columns are ignored.
+- **Cascade:** a prior human decision, then exact ticker (cross-checked against the name), then
+  exact current/former name, then fuzzy name. Confidence below 0.90 means the row goes to
+  `app.match_review` with up to 5 candidates. Settings are in `config/entity_resolution.yaml`.
+- **Decisions:** stored per tenant in `app.entity_alias` (RLS), reused on later uploads and
+  applied to every pending row with the same input. They are never shared across tenants.
+- **Accuracy:** `reports/entity_resolution_eval.md` (`scripts/eval_entity_resolution.py`). On the
+  100-row hold-out file, 100% auto-match precision with 82% auto-matched. On hand-written
+  adversarial cases (subsidiaries, namesakes), 0 wrong auto-matches.
+
 Against a real Supabase stack instead of the shim: `supabase db start` (database only) or
 `supabase start` (full local stack), then `supabase db push` to deploy to a linked project.
 
@@ -109,14 +125,14 @@ Key decisions:
 
 1. **Embeddings provider.** Claude has no embeddings endpoint. `models.yaml` assumes Voyage
    (`voyage-3.5`, 1024 dims, matching `curated.filing_chunk.embedding`). Confirm before Phase 5.
-2. **Tenant-provided aliases.** `curated.company_alias` is global. Reusing one tenant's match
-   decisions for another would leak borrower names across tenants; Phase 3 should keep
-   tenant-provided aliases tenant-scoped.
-3. **Bankruptcy labels need text checks.** The raw Item 1.03 tag includes mis-tags, co-registrant
+2. **Bankruptcy labels need text checks.** The raw Item 1.03 tag includes mis-tags, co-registrant
    and subsidiary-only bankruptcies, and follow-up filings (see `reports/item_103_review.md`).
-4. **WeWork vs sector exclusion.** WeWork is SIC 6512 (real estate), so the spec's exclusion
+3. **WeWork vs sector exclusion.** WeWork is SIC 6512 (real estate), so the spec's exclusion
    rule removes a bankruptcy the spec names as a dev-sample example.
-5. **Credit spread.** FRED now serves only 3 years of `BAMLH0A0HYM2`; `BAA10Y` replaces it
+4. **Credit spread.** FRED now serves only 3 years of `BAMLH0A0HYM2`; `BAA10Y` replaces it
    (SPEC.md 3.9).
+5. **Entity-resolution universe.** Only current SEC registrants (ticker map) plus former names
+   of companies whose submissions were fetched. Delisted borrowers and most former names arrive
+   with the bulk submissions in Phase 4.
 6. **Tenant offboarding.** Alerts, dispositions and audit rows are history and do not cascade,
    so deleting a tenant needs an explicit admin procedure.
