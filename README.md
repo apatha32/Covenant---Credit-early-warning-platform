@@ -1,11 +1,85 @@
-# Tripwire — credit early warning platform
+<div align="center">
 
-Messy SEC filings in, explainable 12-month distress alerts out. See [SPEC.md](SPEC.md) for the
-full build spec and phase plan.
+# Tripwire
 
-**Status:** Phases 0–3 complete (foundations, ingestion, canonical model, entity resolution). Features, labels & models (Phase 4) are next.
+**Credit early-warning platform for lenders: messy SEC filings in, explainable 12-month distress alerts out.**
 
-## Layout
+[![Live demo: in progress](https://img.shields.io/badge/Live_demo-in_progress-f59e0b?style=for-the-badge)](#roadmap)
+[![View the repo on GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github)](https://github.com/apatha32/Covenant---Credit-early-warning-platform)
+[![CI](https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions/workflows/ci.yml)
+
+</div>
+
+## What it does
+
+A credit team at a private-credit fund or mid-market lender uploads its borrower list, often a messy spreadsheet of names
+and maybe tickers. Tripwire:
+
+1. **Resolves each borrower to its SEC entity.** Uncertain matches go to a human review queue
+   instead of being guessed.
+2. **Rebuilds each company's financials point in time** from raw XBRL filings: every number as it
+   was known on any past date, with the exact filing and tag it came from.
+3. **Scores 12-month distress risk** and explains why a borrower is flagged (in progress, Phase 4).
+4. **Gives analysts a console** for the watchlist, drill-downs with evidence, "ask the filings"
+   Q&A with citations, and alert dispositions (Phase 5–6).
+
+## Results so far
+
+| Area | Result | Evidence |
+|---|---|---|
+| Ingestion | 4.0M XBRL facts, 337k filings and 5 FRED macro series for a 205-company dev sample; re-runs are idempotent (0 new rows on a second run); SEC rate limit held at ≤ 8 requests/sec | `raw.ingest_runs` counts |
+| Bankruptcy event scan | 25/25 known Chapter 11 filers found in their petition year; 6 suspicious tags read and documented (mis-tags, co-registrants, subsidiary-only filings) | [spot-check](reports/item_103_spotcheck.md), [review](reports/item_103_review.md) |
+| Canonical financials | 25 metrics from 50+ XBRL tags with ordered fallback, year-to-date → quarterly derivation, restatement versions, scale-error quarantine; core metrics complete for 139/179 active companies | [coverage report](reports/metric_coverage.md) |
+| Entity resolution | **100% auto-match precision at 82% coverage** on a held-out 100-row messy file (typos, old names, missing/wrong tickers); **0 wrong matches** on hand-written subsidiary/namesake traps | [evaluation](reports/entity_resolution_eval.md) |
+| Engineering | Leakage-proof as-of queries, Postgres row-level security for multi-tenancy, 222 automated tests in CI against a real Supabase database | [CI](https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions) |
+
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph Sources
+    SEC[SEC EDGAR<br/>XBRL facts, filings]
+    FRED[FRED<br/>macro series]
+  end
+  subgraph Batch["Python batch jobs"]
+    ING[ingest<br/>rate-limited clients]
+    PIPE[pipeline<br/>staging → curated]
+    ER[entity resolution]
+    ML[ml<br/>features, models]
+  end
+  subgraph Supabase
+    RAW[(raw Parquet<br/>Storage)]
+    PG[(Postgres<br/>raw · staging · curated · ml · app<br/>RLS per tenant)]
+  end
+  WEB[Analyst console<br/>Next.js]
+  SEC --> ING
+  FRED --> ING
+  ING --> RAW
+  RAW --> PIPE
+  PIPE --> PG
+  ER --> PG
+  ML --> PG
+  PG --> WEB
+```
+
+## Roadmap
+
+| Phase | Scope | Status |
+|---|---|---|
+| 0 | Monorepo, config, migrations, row-level security, CI | ✅ Done |
+| 1 | SEC + FRED ingestion, dev sample, bankruptcy event scan | ✅ Done |
+| 2 | Cleaning & canonical point-in-time financial model | ✅ Done |
+| 3 | Entity resolution: upload, matching, review queue | ✅ Done |
+| 4 | Features, labels, Altman / logistic / LightGBM models, SHAP, model card | 🚧 In progress |
+| 5 | LLM risk signals from filing text, Q&A with citations | Planned |
+| 6 | API + analyst console | Planned |
+| 7 | Hosting (Supabase + scheduled jobs + Vercel), drift monitoring, alerts | Planned |
+
+**Stack:** Python 3.12, Polars, PostgreSQL / Supabase (RLS, Storage, pgvector), rapidfuzz,
+Pandera, scikit-learn and LightGBM (Phase 4), Claude API (Phase 5), Next.js (Phase 6).
+Full build spec: [SPEC.md](SPEC.md).
+
+## Repository layout
 
 ```
 packages/common/     tripwire_common: settings (env), YAML config loaders, JSON logging, DB helpers
@@ -16,8 +90,8 @@ services/            ml, llm, api: one uv workspace member each (empty until the
 supabase/migrations/ schema + RLS, applied by the Supabase CLI
 supabase/local/      supabase_shim.sql: Supabase roles + auth.uid() for plain-Postgres dev/tests
 config/              models.yaml (LLM/ML settings) and domain/finance/ (the finance domain pack)
-tests/               common/, db/ (migrations, schema guards, RLS), ingest/ (fake SEC/FRED, end to end)
-reports/             committed data reports (Item 1.03 spot-check)
+tests/               common/, db/ (RLS, schema guards), ingest/, pipeline/, entity/
+reports/             committed data reports (bankruptcy scan, coverage, entity resolution)
 apps/web/            Next.js console (Phase 6)
 ```
 
