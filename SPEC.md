@@ -98,9 +98,14 @@
 - Forms `NT 10-K` and `NT 10-Q` = late filing notices (strong feature)
 
 ### 3.9 FRED series
-- `BAMLH0A0HYM2` (high-yield OAS), `FEDFUNDS`, `UNRATE`, `INDPRO`, `DGS10`
+- ~~`BAMLH0A0HYM2` (high-yield OAS)~~, `BAA10Y` (replacement, see below), `FEDFUNDS`, `UNRATE`, `INDPRO`, `DGS10`
 - Endpoint: `https://api.stlouisfed.org/fred/series/observations?series_id={id}&api_key={key}&file_type=json`
 - Point-in-time: use observations as of their release date, or lag one month to be safe.
+- **Updated 2026-10-20 (Phase 1), source behaved differently than specified:**
+  - Since April 2026 FRED serves only the last 3 years of `BAMLH0A0HYM2` (first observation 2023-10-23), so it cannot cover a 2010+ training window. Replaced by `BAA10Y` (Moody's Baa corporate yield minus 10-year Treasury, daily since 1986) as the credit-spread feature.
+  - Monthly series (`FEDFUNDS`, `UNRATE`, `INDPRO`) are pulled with every ALFRED vintage (`realtime_start=1776-07-04&realtime_end=9999-12-31`); release date = `realtime_start`.
+  - Daily market series (`BAA10Y`, `DGS10`) exceed FRED's 2,000-vintage limit per request and are not revised, so they are pulled without vintages; release date = observation date + 1 day.
+  - Configured in `config/domain/finance/macro_series.yaml`.
 
 ### 3.10 Sector exclusions (by SIC from submissions)
 - Exclude SIC 6000–6799 (banks, insurance, REITs, investment vehicles), including shell companies (6770).
@@ -111,6 +116,11 @@
 - Resolve their CIKs via `company_tickers.json` or submissions data (tickers often change after bankruptcy; match by former names).
 - Derive the full positive-label set programmatically by scanning all submissions for 8-K item 1.03; never hand-maintain it.
 - Spot-check the 1.03 scan on the dev sample: some hits will be subsidiaries or oddly tagged. Log them as data issues; don't silently fix them.
+- **Updated 2026-10-20 (Phase 1):**
+  - The seed list (with verified CIKs) lives in `config/domain/finance/known_bankruptcies.yaml`. CEC Entertainment was dropped (no Item 1.03 filing on EDGAR).
+  - WeWork has SIC 6512 (real estate operators), so the 3.10 exclusion rule excludes it. It stays in the seed list, flagged, until the exclusion rule is revisited (open question).
+  - Bankruptcies produce several Item 1.03 8-Ks (petition, then confirmation/emergence), and some companies file Chapter 11 twice. Filing dates alone cannot separate them; see `reports/item_103_spotcheck.md`.
+  - The random part of the dev sample is drawn from today's `company_tickers.json`, so it only includes surviving companies. The Phase 4 training universe comes from the bulk files instead.
 
 ---
 
