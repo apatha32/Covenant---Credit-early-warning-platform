@@ -6,11 +6,13 @@ holds no matter how many requests fail.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import random
 import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from pathlib import Path
 
 import httpx
 
@@ -121,4 +123,40 @@ class HttpClient:
                 extra={"url": safe_url, "reason": reason, "attempt": attempt + 1, "delay": delay},
             )
             self._sleep(delay)
+        raise AssertionError("unreachable")
+
+    def download(self, url: str, dest: Path, chunk_size: int = 1 << 20) -> tuple[str, int]:
+        """Stream a large file to `dest` (one rate-limited request per attempt).
+
+        Returns (sha256 hex, size in bytes). Retries restart the download from the beginning.
+        """
+        safe_url = redact(self._client.build_request("GET", url).url)
+        for attempt in range(self.max_retries + 1):
+            self.stats.wait_seconds += self.bucket.acquire()
+            self.meter.record()
+            self.stats.requests += 1
+            digest, size = hashlib.sha256(), 0
+            try:
+                with self._client.stream("GET", url) as response:
+                    if response.status_code >= 400:
+                        if response.status_code not in RETRY_STATUSES:
+                            raise HttpError(f"GET {safe_url} -> {response.status_code}",
+                                            status=response.status_code)  # fmt: skip
+                        raise httpx.TransportError(f"HTTP {response.status_code}")
+                    with dest.open("wb") as fh:
+                        for chunk in response.iter_bytes(chunk_size):
+                            fh.write(chunk)
+                            digest.update(chunk)
+                            size += len(chunk)
+                return digest.hexdigest(), size
+            except httpx.TransportError as exc:
+                if attempt == self.max_retries:
+                    raise HttpError(
+                        f"GET {safe_url} failed after {attempt + 1} attempts ({exc})"
+                    ) from exc
+                self.stats.retries += 1
+                delay = self._backoff(attempt, None)
+                log.warning("retrying download", extra={"url": safe_url, "attempt": attempt + 1,
+                                                        "delay": delay})  # fmt: skip
+                self._sleep(delay)
         raise AssertionError("unreachable")
