@@ -6,6 +6,7 @@
 
 **Credit early-warning platform for lenders: messy SEC filings in, explainable 12-month distress alerts out.**
 
+[![Project site](https://img.shields.io/badge/Project_site-visit-b45309?style=for-the-badge)](https://apatha32.github.io/Covenant---Credit-early-warning-platform/)
 [![Live demo: in progress](https://img.shields.io/badge/Live_demo-in_progress-f59e0b?style=for-the-badge)](#roadmap)
 [![View the repo on GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github)](https://github.com/apatha32/Covenant---Credit-early-warning-platform)
 [![CI](https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions/workflows/ci.yml)

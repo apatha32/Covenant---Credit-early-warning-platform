@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Covenant — Credit Early Warning Platform</title>
+<meta name="description" content="Covenant turns messy SEC filings into point-in-time financials and explainable 12-month distress alerts for credit teams.">
+<meta property="og:title" content="Covenant — Credit Early Warning Platform">
+<meta property="og:description" content="Messy SEC filings in, explainable 12-month distress alerts out.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23b45309'/><path d='M9 21l5-6 4 3 5-8' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<style>
+  :root {
+    --bg: #fbfaf7; --surface: #ffffff; --ink: #1c1917; --muted: #57534e; --line: #e7e5e4;
+    --accent: #b45309; --accent-ink: #ffffff; --accent-soft: #fef3c7; --ok: #15803d; --ok-soft: #dcfce7;
+    --plan: #78716c; --shadow: 0 1px 2px rgba(28,25,23,.06), 0 8px 24px rgba(28,25,23,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12100e; --surface: #1c1917; --ink: #f5f5f4; --muted: #a8a29e; --line: #2e2a27;
+      --accent: #f59e0b; --accent-ink: #1c1917; --accent-soft: #3a2a0a; --ok: #4ade80; --ok-soft: #12301d;
+      --plan: #a8a29e; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  a { color: var(--accent); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+  header { padding: 72px 0 48px; border-bottom: 1px solid var(--line); }
+  .eyebrow { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin: 0 0 12px; }
+  h1 { font-size: clamp(40px, 7vw, 64px); line-height: 1.05; margin: 0 0 16px; letter-spacing: -.02em; }
+  .lede { font-size: clamp(18px, 2.4vw, 22px); color: var(--muted); max-width: 720px; margin: 0 0 32px; }
+  .buttons { display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 10px;
+    font-weight: 600; text-decoration: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    box-shadow: var(--shadow);
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn svg { width: 18px; height: 18px; flex: none; }
+  .btn.soon { cursor: default; color: var(--muted); box-shadow: none; }
+  .pill { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+  section { padding: 56px 0; border-bottom: 1px solid var(--line); }
+  h2 { font-size: 28px; margin: 0 0 8px; letter-spacing: -.01em; }
+  .sub { color: var(--muted); margin: 0 0 28px; max-width: 720px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); }
+  .card h3 { margin: 8px 0 6px; font-size: 17px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  .step { font-size: 13px; font-weight: 700; color: var(--accent); }
+  .stat { font-size: 34px; font-weight: 750; letter-spacing: -.02em; line-height: 1.1; }
+  .stat small { font-size: 15px; font-weight: 600; color: var(--muted); letter-spacing: 0; }
+  .card a.ev { display: inline-block; margin-top: 10px; font-size: 14px; font-weight: 600; }
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; }
+  .node { flex: 1 1 150px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+  .node b { display: block; font-size: 15px; }
+  .node span { color: var(--muted); font-size: 13px; }
+  .arrow { align-self: center; color: var(--muted); font-size: 20px; flex: none; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  th { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .status { font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+  .done { background: var(--ok-soft); color: var(--ok); }
+  .wip { background: var(--accent-soft); color: var(--accent); }
+  .planned { border: 1px solid var(--line); color: var(--plan); }
+  .stack { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+  .stack span { font-size: 14px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); }
+  footer { padding: 32px 0 48px; color: var(--muted); font-size: 14px; }
+  @media (max-width: 640px) {
+    header { padding: 48px 0 36px; }
+    .arrow { transform: rotate(90deg); width: 100%; text-align: center; }
+    .node { flex-basis: 100%; }
+    th:nth-child(2), td:nth-child(2) { display: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="eyebrow">Credit Early Warning Platform</p>
+    <h1>Covenant</h1>
+    <p class="lede">Messy SEC filings in, explainable 12-month distress alerts out, built for credit teams monitoring a portfolio of public borrowers.</p>
+    <div class="buttons">
+      <a class="btn primary" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        View on GitHub
+      </a>
+      <span class="btn soon" aria-disabled="true" title="The analyst console is being built (Phase 6)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        Live demo <span class="pill">in progress</span>
+      </span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="wrap">
+      <h2>What it does</h2>
+      <p class="sub">A lender uploads its borrower list, usually a messy spreadsheet of names and maybe tickers. Covenant does the rest.</p>
+      <div class="grid">
+        <div class="card"><div class="step">01</div><h3>Finds each borrower</h3><p>Matches names and tickers to SEC companies. Uncertain matches go to a human review queue instead of being guessed.</p></div>
+        <div class="card"><div class="step">02</div><h3>Rebuilds the financials</h3><p>Turns raw XBRL filings into clean quarterly numbers, each as it was known on any past date, traced to its exact filing and tag.</p></div>
+        <div class="card"><div class="step">03</div><h3>Scores distress risk</h3><p>Predicts 12-month bankruptcy risk and explains why a borrower is flagged. <em>(in progress)</em></p></div>
+        <div class="card"><div class="step">04</div><h3>Gives analysts a console</h3><p>Watchlist, drill-downs with evidence, Q&amp;A over filings with citations, and alert dispositions. <em>(planned)</em></p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Results so far</h2>
+      <p class="sub">Measured on real SEC data. Each number links to the committed report behind it.</p>
+      <div class="grid">
+        <div class="card">
+          <div class="stat">100%<small> precision</small></div>
+          <h3>Borrower matching</h3>
+          <p>Auto-match precision at 82% coverage on a held-out, deliberately messy 100-row file (typos, old names, wrong tickers). Zero false matches on subsidiary and namesake traps.</p>
+          <a class="ev" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform/blob/main/reports/entity_resolution_eval.md">Evaluation →</a>
+        </div>
+        <div class="card">
+          <div class="stat">4.0M<small> XBRL facts</small></div>
+          <h3>Point-in-time financials</h3>
+          <p>205 companies → 25 standardized metrics from 50+ tags, with quarterly derivation, restatement versions and scale-error checks.</p>
+          <a class="ev" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform/blob/main/reports/metric_coverage.md">Coverage report →</a>
+        </div>
+        <div class="card">
+          <div class="stat">25/25<small> found</small></div>
+          <h3>Bankruptcy event scan</h3>
+          <p>Every known Chapter 11 filer in the sample detected in its petition year; mis-tagged and subsidiary-only filings documented, not silently fixed.</p>
+          <a class="ev" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform/blob/main/reports/item_103_review.md">Manual review →</a>
+        </div>
+        <div class="card">
+          <div class="stat">222<small> tests in CI</small></div>
+          <h3>Built to be trusted</h3>
+          <p>Leakage-proof as-of queries, Postgres row-level security per tenant, migrations checked against a real Supabase database on every change.</p>
+          <a class="ev" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions">CI runs →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>How it works</h2>
+      <p class="sub">Batch Python jobs pull public data, clean it into a point-in-time model, and serve it through Supabase with per-tenant security.</p>
+      <div class="flow">
+        <div class="node"><b>SEC EDGAR + FRED</b><span>filings, XBRL facts, macro series</span></div>
+        <div class="arrow">→</div>
+        <div class="node"><b>Ingest</b><span>rate-limited, idempotent raw landing</span></div>
+        <div class="arrow">→</div>
+        <div class="node"><b>Pipeline</b><span>tag mapping, quarters, versions, quarantine</span></div>
+        <div class="arrow">→</div>
+        <div class="node"><b>Models</b><span>features, labels, risk scores, explanations</span></div>
+        <div class="arrow">→</div>
+        <div class="node"><b>Analyst console</b><span>watchlist, evidence, alerts</span></div>
+      </div>
+      <div class="stack">
+        <span>Python 3.12</span><span>Polars</span><span>PostgreSQL / Supabase</span><span>Row-level security</span><span>rapidfuzz</span><span>Pandera</span><span>LightGBM</span><span>Claude API</span><span>Next.js</span><span>GitHub Actions</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Roadmap</h2>
+      <p class="sub">Built phase by phase; each phase ships with acceptance tests before the next starts.</p>
+      <table>
+        <thead><tr><th>Phase</th><th>Scope</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>0 · Foundations</td><td>Monorepo, migrations, row-level security, CI</td><td><span class="status done">Done</span></td></tr>
+          <tr><td>1 · Ingestion</td><td>SEC + FRED clients, dev sample, bankruptcy scan</td><td><span class="status done">Done</span></td></tr>
+          <tr><td>2 · Canonical model</td><td>Point-in-time financials, quarters, restatements</td><td><span class="status done">Done</span></td></tr>
+          <tr><td>3 · Entity resolution</td><td>Upload, matching cascade, review queue</td><td><span class="status done">Done</span></td></tr>
+          <tr><td>4 · Models</td><td>Features, labels, Altman / logistic / LightGBM, SHAP</td><td><span class="status wip">In progress</span></td></tr>
+          <tr><td>5 · LLM signals</td><td>Risk signals from filing text, Q&amp;A with citations</td><td><span class="status planned">Planned</span></td></tr>
+          <tr><td>6 · App</td><td>API and analyst console (live demo)</td><td><span class="status planned">Planned</span></td></tr>
+          <tr><td>7 · Hosting</td><td>Supabase, scheduled jobs, drift monitoring, alerts</td><td><span class="status planned">Planned</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">Covenant · Credit Early Warning Platform · Data from public SEC EDGAR and FRED sources · <a href="https://github.com/apatha32/Covenant---Credit-early-warning-platform">Source on GitHub</a></div>
+</footer>
+</body>
+</html>
