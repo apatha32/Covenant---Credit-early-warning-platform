@@ -21,6 +21,8 @@ class StorageError(RuntimeError):
 
 class Storage(Protocol):
     def write_bytes(self, key: str, data: bytes) -> None: ...
+    def write_file(self, key: str, source: Path) -> None: ...
+    def local_path(self, key: str) -> Path: ...
     def read_bytes(self, key: str) -> bytes: ...
     def exists(self, key: str) -> bool: ...
     def uri(self, key: str) -> str: ...
@@ -56,6 +58,25 @@ class LocalStorage:
         except BaseException:
             Path(tmp).unlink(missing_ok=True)
             raise
+
+    def write_file(self, key: str, source: Path) -> None:
+        """Move a large local file into storage without reading it into memory. Keys for big
+        objects are content-addressed, so an existing key already holds the same bytes."""
+        path = self._path(key)
+        if path.exists():
+            if path.stat().st_size != source.stat().st_size:
+                raise StorageError(f"refusing to overwrite existing object with new content: {key}")
+            source.unlink()
+            return
+        path.parent.mkdir(parents=True, exist_ok=True)
+        os.replace(source, path)
+
+    def local_path(self, key: str) -> Path:
+        """Filesystem path of an object, for streaming readers (e.g. zipfile)."""
+        path = self._path(key)
+        if not path.is_file():
+            raise StorageError(f"no such object: {key}")
+        return path
 
     def read_bytes(self, key: str) -> bytes:
         path = self._path(key)

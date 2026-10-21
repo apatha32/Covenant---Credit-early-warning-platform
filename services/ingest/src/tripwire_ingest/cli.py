@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import logging
 from dataclasses import dataclass
+from pathlib import Path
 
 import httpx
 import polars as pl
@@ -155,6 +156,41 @@ def cmd_fred(ctx: Context) -> None:
                 run.item_failed(series.id, exc)
 
 
+BULK_FILES = {"submissions": "bulk_submissions_url", "companyfacts": "bulk_companyfacts_url"}
+
+
+def cmd_bulk(ctx: Context, names: list[str]) -> None:
+    """Download SEC bulk zips (GBs) into raw storage, content-addressed and indexed."""
+    import tempfile
+
+    with ctx.sec() as client, ingest_run(ctx.conn, "sec_bulk", [client]) as run:
+        for name in names:
+            url = getattr(ctx.sources.sec, BULK_FILES[name])
+            with tempfile.NamedTemporaryFile(dir=ctx.settings.tripwire_data_dir, delete=False,
+                                             prefix=".download-") as tmp:  # fmt: skip
+                tmp_path = Path(tmp.name)
+            try:
+                checksum, size = client.download(url, tmp_path)
+                key = f"sec/bulk/{name}/sha256={checksum}/{name}.zip"
+                seen = ctx.conn.execute(
+                    "select 1 from raw.source_files where source = 'sec_bulk' "
+                    "and source_key = %s and checksum = %s", [name, checksum],
+                ).fetchone()  # fmt: skip
+                ctx.storage.write_file(key, tmp_path)
+                if seen:
+                    run.counts["unchanged"] += 1
+                    continue
+                ctx.conn.execute(
+                    """insert into raw.source_files (source, source_key, storage_path, checksum,
+                                                     run_id) values ('sec_bulk', %s, %s, %s, %s)""",
+                    [name, key, checksum, run.id],
+                )
+                run.counts["landed_new"] += 1
+                run.counts[f"{name}_bytes"] = size
+            finally:
+                tmp_path.unlink(missing_ok=True)
+
+
 def cmd_scan(ctx: Context) -> None:
     sample = load_dev_sample(ctx.pack)
     with ingest_run(ctx.conn, "item_scan") as run:
@@ -183,6 +219,10 @@ def main(argv: list[str] | None = None) -> None:
         p = sub.add_parser(name, help=f"land SEC {name} (default: the dev sample)")
         p.add_argument("--cik", type=int, nargs="+", help="specific CIKs instead of the dev sample")
     sub.add_parser("fred", help="land the domain pack's FRED series")
+    bulk = sub.add_parser("bulk", help="download SEC bulk zips (several GB) into raw storage")
+    bulk.add_argument(
+        "names", nargs="*", choices=[*BULK_FILES, []], default=[], help="which files (default: all)"
+    )
     sub.add_parser("scan", help="scan for primary-label 8-K items and write the spot-check report")
     args = parser.parse_args(argv)
 
@@ -211,5 +251,7 @@ def main(argv: list[str] | None = None) -> None:
             cmd_companyfacts(ctx, args.cik)
         elif args.command == "fred":
             cmd_fred(ctx)
+        elif args.command == "bulk":
+            cmd_bulk(ctx, args.names or list(BULK_FILES))
         elif args.command == "scan":
             cmd_scan(ctx)
