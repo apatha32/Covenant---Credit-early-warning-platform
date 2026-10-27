@@ -11,6 +11,8 @@ sec:
   submissions_url: https://data.sec.gov/submissions/CIK{cik10}.json
   submissions_page_url: https://data.sec.gov/submissions/{name}
   companyfacts_url: https://data.sec.gov/api/xbrl/companyfacts/CIK{cik10}.json
+  # Filing documents (8-K text for label checks, later 10-K/10-Q text for LLM signals).
+  document_url: https://www.sec.gov/Archives/edgar/data/{archive_cik}/{accession_nodash}/{document}
   bulk_submissions_url: https://www.sec.gov/Archives/edgar/daily-index/bulkdata/submissions.zip
   bulk_companyfacts_url: https://www.sec.gov/Archives/edgar/daily-index/xbrl/companyfacts.zip
 

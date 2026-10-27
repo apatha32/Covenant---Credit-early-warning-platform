@@ -15,17 +15,20 @@ import argparse
 import datetime as dt
 import logging
 from dataclasses import dataclass
+from pathlib import Path
 
+import polars as pl
 import psycopg
 
 from tripwire_common.config import DomainPack, load_dev_sample, load_domain_pack
 from tripwire_common.db import connect
 from tripwire_common.logging import configure_logging
+from tripwire_common.paths import training_root
 from tripwire_common.raw import latest_cik_path, read_parquet
 from tripwire_common.runs import ingest_run
 from tripwire_common.settings import REPO_ROOT, get_settings
 from tripwire_common.storage import Storage, get_storage
-from tripwire_pipeline import load
+from tripwire_pipeline import bulk, load
 from tripwire_pipeline.coverage import render_coverage
 from tripwire_pipeline.events import extract_events, typed_filings
 from tripwire_pipeline.metrics import build_rows, resolve, scale_outliers
@@ -127,6 +130,43 @@ def cmd_coverage(ctx: Context) -> None:
     log.info("coverage report written", extra={"path": str(COVERAGE_PATH)})
 
 
+def training_dir(ctx: Context) -> Path:
+    """Where the training universe lives, per mapping version (Parquet, not Postgres)."""
+    return training_root(ctx.pack.metrics.mapping_version)
+
+
+def _bulk_zip(ctx: Context, name: str) -> Path:
+    row = ctx.conn.execute(
+        """select storage_path from raw.source_files where source = 'sec_bulk' and source_key = %s
+           order by fetched_at desc limit 1""",
+        [name],
+    ).fetchone()
+    if row is None:
+        raise SystemExit(f"no {name}.zip landed; run `python -m tripwire_ingest bulk` first")
+    return ctx.storage.local_path(str(row[0]))
+
+
+def cmd_training_data(ctx: Context, limit: int | None, since: str) -> None:
+    """Bulk zips -> training universe Parquet (companies, filings, canonical metrics)."""
+    out = training_dir(ctx)
+    with ingest_run(ctx.conn, "pipeline_bulk") as run:
+        run.counts.update(bulk.build_submissions(_bulk_zip(ctx, "submissions"), out, ctx.pack))
+        filings = pl.scan_parquet(out / "filings" / "*.parquet")
+        recent_reports = pl.col("form").is_in(bulk.REPORT_FORMS) & (pl.col("filingDate") >= since)
+        active = set(filings.filter(recent_reports).select("cik").unique().collect()["cik"])
+        companies = pl.read_parquet(out / "companies.parquet")
+        universe = sorted(set(companies.filter(~pl.col("is_excluded"))["cik"]) & active)
+        if limit:
+            universe = universe[:limit]
+        run.counts["universe"] = len(universe)
+        counts, errors = bulk.build_metrics(_bulk_zip(ctx, "companyfacts"), out, set(universe),
+                                            ctx.pack.metrics)  # fmt: skip
+        run.counts.update(counts)
+        for cik, error in errors:
+            run.item_failed(cik, RuntimeError(error))
+    log.info("training data written", extra={"path": str(out)})
+
+
 COMMANDS = {"staging": cmd_staging, "curated": cmd_curated, "events": cmd_events,
             "coverage": cmd_coverage}  # fmt: skip
 
@@ -137,9 +177,15 @@ def main(argv: list[str] | None = None) -> None:
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("command", choices=["all", *COMMANDS])
+    parser.add_argument("command", choices=["all", "training-data", *COMMANDS])
     parser.add_argument(
         "--cik", type=int, nargs="+", help="specific CIKs instead of the dev sample"
+    )
+    parser.add_argument("--limit", type=int, help="training-data: only the first N companies")
+    parser.add_argument(
+        "--since",
+        default="2009-01-01",
+        help="training-data: companies with a 10-K/10-Q filed on or after this date",
     )
     args = parser.parse_args(argv)
 
@@ -149,6 +195,9 @@ def main(argv: list[str] | None = None) -> None:
     ciks = [f"{c:010d}" for c in (args.cik or load_dev_sample(pack).ciks())]
     with connect(autocommit=True) as conn:
         ctx = Context(conn, pack, get_storage(settings), ciks)
+        if args.command == "training-data":
+            cmd_training_data(ctx, args.limit, args.since)
+            return
         steps = list(COMMANDS) if args.command == "all" else [args.command]
         for step in steps:
             COMMANDS[step](ctx)

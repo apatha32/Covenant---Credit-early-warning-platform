@@ -271,13 +271,21 @@ def derive_quarters(observations: list[Observation], mapping: MetricMapping) -> 
     for versions in [*series.values(), *direct_q.values()]:
         versions.sort(key=lambda o: (o.filed_date, o.accession))
 
+    # Index candidate parts by (metric, class, start) so each total only looks at its own parts.
+    parts_by_start: dict[
+        tuple[str, ObsClass, dt.date | None], list[tuple[dt.date, list[Observation]]]
+    ]
+    parts_by_start = defaultdict(list)
+    for (metric, cls, start, end), versions in series.items():
+        parts_by_start[(metric, cls, start)].append((end, versions))
+
     derived: list[MetricRow] = []
     for (metric, total_cls, start, end), totals in series.items():
         if total_cls not in YTD_PART or start is None:
             continue
         part_cls: DurationClass = YTD_PART[total_cls]
-        for (p_metric, p_cls, p_start, p_end), parts in series.items():
-            if (p_metric, p_cls, p_start) != (metric, part_cls, start) or p_end >= end:
+        for p_end, parts in parts_by_start.get((metric, part_cls, start), []):
+            if p_end >= end:
                 continue
             q_start = p_end + dt.timedelta(days=1)
             if classify_duration(q_start, end) != "Q":

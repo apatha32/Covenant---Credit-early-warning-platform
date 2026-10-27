@@ -22,7 +22,8 @@ and maybe tickers. Covenant:
    instead of being guessed.
 2. **Rebuilds each company's financials point in time** from raw XBRL filings: every number as it
    was known on any past date, with the exact filing and tag it came from.
-3. **Scores 12-month distress risk** and explains why a borrower is flagged (in progress, Phase 4).
+3. **Scores 12-month distress risk** with a calibrated LightGBM model and explains, in plain
+   English, why a borrower is flagged.
 4. **Gives analysts a console** for the watchlist, drill-downs with evidence, "ask the filings"
    Q&A with citations, and alert dispositions (Phase 5–6).
 
@@ -34,7 +35,8 @@ and maybe tickers. Covenant:
 | Bankruptcy event scan | 25/25 known Chapter 11 filers found in their petition year; 6 suspicious tags read and documented (mis-tags, co-registrants, subsidiary-only filings) | [spot-check](reports/item_103_spotcheck.md), [review](reports/item_103_review.md) |
 | Canonical financials | 25 metrics from 50+ XBRL tags with ordered fallback, year-to-date → quarterly derivation, restatement versions, scale-error quarantine; core metrics complete for 139/179 active companies | [coverage report](reports/metric_coverage.md) |
 | Entity resolution | **100% auto-match precision at 82% coverage** on a held-out 100-row messy file (typos, old names, missing/wrong tickers); **0 wrong matches** on hand-written subsidiary/namesake traps | [evaluation](reports/entity_resolution_eval.md) |
-| Engineering | Leakage-proof as-of queries, Postgres row-level security for multi-tenancy, 222 automated tests in CI against a real Supabase database | [CI](https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions) |
+| Distress model | **LightGBM PR-AUC 0.098 vs 0.019 for an Altman Z'' baseline** (5x; base rate 1.1%) on 2022+ test data across ~6,000 companies; 65% of bankruptcies ranked in the riskiest 10%; flagged a median **14 months** before filing (151 of 211); beats Altman in every backtest year 2015-2024 | [model card](reports/model_eval.md) |
+| Engineering | Leakage test (features recomputed with all later data deleted must not change, and a planted leak must be caught), Postgres row-level security for multi-tenancy, 249 automated tests in CI against a real Supabase database | [CI](https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions) |
 
 ## Architecture
 
@@ -73,13 +75,13 @@ flowchart LR
 | 1 | SEC + FRED ingestion, dev sample, bankruptcy event scan | ✅ Done |
 | 2 | Cleaning & canonical point-in-time financial model | ✅ Done |
 | 3 | Entity resolution: upload, matching, review queue | ✅ Done |
-| 4 | Features, labels, Altman / logistic / LightGBM models, SHAP, model card | 🚧 In progress |
-| 5 | LLM risk signals from filing text, Q&A with citations | Planned |
+| 4 | Features, labels, Altman / logistic / LightGBM models, SHAP, model card | ✅ Done |
+| 5 | LLM risk signals from filing text, Q&A with citations | Next |
 | 6 | API + analyst console | Planned |
 | 7 | Hosting (Supabase + scheduled jobs + Vercel), drift monitoring, alerts | Planned |
 
 **Stack:** Python 3.12, Polars, PostgreSQL / Supabase (RLS, Storage, pgvector), rapidfuzz,
-Pandera, scikit-learn and LightGBM (Phase 4), Claude API (Phase 5), Next.js (Phase 6).
+Pandera, scikit-learn, LightGBM with TreeSHAP, Claude API (Phase 5), Next.js (Phase 6).
 Full build spec: [SPEC.md](SPEC.md).
 
 ## Repository layout
@@ -89,7 +91,8 @@ packages/common/     tripwire_common: settings (env), YAML config loaders, JSON 
 services/ingest/     SEC + FRED clients, rate limiter, raw Parquet landing, dev sample, Item 1.03 scan
 services/pipeline/   raw -> staging -> curated (tag mapping, YTD derivation, versions, events);
                      entity/ = borrower upload, matching cascade, review queue
-services/            ml, llm, api: one uv workspace member each (empty until their phase)
+services/ml/         labels (text-checked), point-in-time features, models, evaluation, model card
+services/            llm, api: one uv workspace member each (empty until their phase)
 supabase/migrations/ schema + RLS, applied by the Supabase CLI
 supabase/local/      supabase_shim.sql: Supabase roles + auth.uid() for plain-Postgres dev/tests
 config/              models.yaml (LLM/ML settings) and domain/finance/ (the finance domain pack)
@@ -162,6 +165,30 @@ uv run python -m tripwire_pipeline all      # staging, curated, events, coverage
   100-row hold-out file, 100% auto-match precision with 82% auto-matched. On hand-written
   adversarial cases (subsidiaries, namesakes), 0 wrong auto-matches.
 
+## Models (Phase 4)
+
+```sh
+uv run python -m tripwire_ingest bulk            # SEC bulk zips (~3 GB) into raw storage
+uv run python -m tripwire_pipeline training-data # 11k companies -> Parquet (same Phase 2 code)
+uv run python -m tripwire_ml labels              # classify 2.7k Item 1.03 8-Ks from their text
+uv run python -m tripwire_ml dataset             # quarterly point-in-time features + labels
+uv run python -m tripwire_ml train               # 3 models, backtest, registry, model card
+```
+
+- **Labels:** the 8-K Item 1.03 tag is noisy, so each filing's text is classified (own petition,
+  subsidiary-only, sister company, follow-up, mis-tag) with rules in
+  `config/domain/finance/labels.yaml`. Estimated precision ≈ 88% from a fresh hand-checked
+  sample. Rows inside a bankruptcy are excluded.
+- **Features:** 56 point-in-time features (Altman Z'' components, leverage, coverage, liquidity,
+  runway, trends, filing behavior, macro as released, missingness). One function computes them,
+  for training and scoring alike.
+- **Leakage test:** features recomputed after deleting every later filing, restatement and macro
+  release must be identical; it runs in CI (with a planted leak that must be caught) and on real
+  data during every dataset build.
+- **Models:** Altman Z'' rule, logistic regression, LightGBM; isotonic calibration on validation;
+  time-based splits with non-overlapping label windows; rolling-origin backtest; TreeSHAP drivers
+  in plain English; registry in `ml.model_version` with a promotion rule.
+
 Against a real Supabase stack instead of the shim: `supabase db start` (database only) or
 `supabase start` (full local stack), then `supabase db push` to deploy to a linked project.
 
@@ -202,14 +229,16 @@ Key decisions:
 
 1. **Embeddings provider.** Claude has no embeddings endpoint. `models.yaml` assumes Voyage
    (`voyage-3.5`, 1024 dims, matching `curated.filing_chunk.embedding`). Confirm before Phase 5.
-2. **Bankruptcy labels need text checks.** The raw Item 1.03 tag includes mis-tags, co-registrant
-   and subsidiary-only bankruptcies, and follow-up filings (see `reports/item_103_review.md`).
+2. **Bankruptcy label recall.** Labels are now text-checked (≈ 88% precision), but companies that
+   go bankrupt without filing an Item 1.03 8-K are not seen, and recall is not measured.
 3. **WeWork vs sector exclusion.** WeWork is SIC 6512 (real estate), so the spec's exclusion
    rule removes a bankruptcy the spec names as a dev-sample example.
 4. **Credit spread.** FRED now serves only 3 years of `BAMLH0A0HYM2`; `BAA10Y` replaces it
    (SPEC.md 3.9).
-5. **Entity-resolution universe.** Only current SEC registrants (ticker map) plus former names
-   of companies whose submissions were fetched. Delisted borrowers and most former names arrive
-   with the bulk submissions in Phase 4.
+5. **Entity-resolution universe.** Only current SEC registrants plus known former names. The bulk
+   submissions (Phase 4) now hold all 43k operating filers with former names; wiring them into
+   matching is pending.
 6. **Tenant offboarding.** Alerts, dispositions and audit rows are history and do not cascade,
    so deleting a tenant needs an explicit admin procedure.
+7. **Calibration drift.** Probabilities are calibrated on 2020 (a low-default year) and run about
+   25% low on 2022+ data; recalibration belongs with drift monitoring (Phase 7).

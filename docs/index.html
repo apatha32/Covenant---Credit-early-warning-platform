@@ -112,7 +112,7 @@
   .kicker { font-size: 13px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 8px; }
   .sub { color: var(--muted); margin: 0 0 32px; max-width: 720px; font-size: 17px; }
   .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); }
-  .grid.two { grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); }
+  .grid.two { grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); }
   .grid.five { grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); }
   .card {
     background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; box-shadow: var(--shadow);
@@ -169,7 +169,7 @@
   /* roadmap */
   .progress { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; margin: 0 0 24px; max-width: 520px; }
   .progress i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--ok), var(--accent)); transition: width 1.4s var(--ease); }
-  .reveal.in .progress i { width: 50%; }
+  .reveal.in .progress i { width: 62.5%; }
   .status { font-size: 13px; font-weight: 650; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
   .done { background: var(--ok-soft); color: var(--ok); }
   .wip { background: var(--accent-soft); color: var(--accent); }
@@ -204,7 +204,7 @@
     *, *::before, *::after { animation: none !important; transition: none !important; }
     .reveal, .stagger > * { opacity: 1; transform: none; }
     .chart .line { stroke-dashoffset: 0; } .chart .area { opacity: .1; } .chart .flag { opacity: 1; }
-    .conf .bar i { width: var(--w); } .progress i { width: 50%; }
+    .conf .bar i { width: var(--w); } .progress i { width: 62.5%; }
   }
   @media (max-width: 860px) {
     .hero, .example { grid-template-columns: 1fr; }
@@ -306,7 +306,7 @@
       <div class="grid stagger" style="margin-top:28px">
         <div class="card"><div class="step">01 · Match</div><h3>Find each borrower</h3><p>Names and tickers are resolved to SEC companies; anything uncertain goes to a reviewer, never a guess.</p></div>
         <div class="card"><div class="step">02 · Rebuild</div><h3>Clean the financials</h3><p>25 standard metrics per company, every value dated to when it became public and traced to its filing.</p></div>
-        <div class="card"><div class="step">03 · Score</div><h3>Rank distress risk</h3><p>12-month bankruptcy risk from ratios, trends, filing behavior and macro conditions, with plain-English drivers. <em>(in progress)</em></p></div>
+        <div class="card"><div class="step">03 · Score</div><h3>Rank distress risk</h3><p>A calibrated LightGBM model scores 12-month bankruptcy risk from ratios, trends, filing behavior and macro conditions, with plain-English drivers.</p></div>
         <div class="card"><div class="step">04 · Act</div><h3>Review and respond</h3><p>A watchlist with drill-downs, Q&amp;A over filings with citations, and agree/dismiss feedback. <em>(planned)</em></p></div>
       </div>
       <div class="stack">
@@ -398,10 +398,39 @@
         </div>
       </div>
 
+      <h2 style="margin-top:56px">The distress model</h2>
+      <p class="sub">Trained on 11,000 SEC filers since 2011; tested on 2022+ data it never saw (78,000 company-quarters, 1.1% default rate).</p>
+      <div class="grid stagger">
+        <div class="card">
+          <div class="stat"><span data-count="5.1" data-decimals="1">5.1</span>x<small> Altman Z''</small></div>
+          <h3>Better ranking than the classic</h3>
+          <p>PR-AUC 0.098 for LightGBM vs 0.019 for an Altman Z'' baseline (random ≈ 0.011), and ahead in every backtest year 2015–2024.</p>
+          <a class="ev" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform/blob/main/reports/model_eval.md">Model card <span>→</span></a>
+        </div>
+        <div class="card">
+          <div class="stat"><span data-count="65">65</span>%<small> caught</small></div>
+          <h3>Of bankruptcies in the riskiest 10%</h3>
+          <p>Ranked within each quarter, the top tenth of companies held 65% of the next year's bankruptcies (45% in the top 5%).</p>
+          <a class="ev" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform/blob/main/reports/model_eval.md">Results <span>→</span></a>
+        </div>
+        <div class="card">
+          <div class="stat"><span data-count="14">14</span><small> months early</small></div>
+          <h3>Median warning time</h3>
+          <p>151 of 211 test-period bankruptcies entered the high-risk tier before filing, a median 14 months ahead.</p>
+          <a class="ev" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform/blob/main/reports/model_eval.md">Lead times <span>→</span></a>
+        </div>
+        <div class="card">
+          <div class="stat"><span data-count="0">0</span><small> leaks</small></div>
+          <h3>Leakage test</h3>
+          <p>Features recomputed with every later filing, restatement and macro release deleted come out identical; a planted leak is caught in CI.</p>
+          <a class="ev" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform/blob/main/tests/ml/test_leakage.py">The test <span>→</span></a>
+        </div>
+      </div>
+
       <h2 style="margin-top:56px">What the data taught us</h2>
       <p class="sub">Real findings, documented instead of silently patched.</p>
       <div class="grid two stagger">
-        <div class="card"><h3>A label you can't take at face value</h3><p>SEC's bankruptcy tag (8-K Item 1.03) includes mis-tags (AT&amp;T, 2012), sister-company filings and subsidiary-only cases. Labels will be confirmed against the filing text.</p><a class="ev" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform/blob/main/reports/item_103_review.md">Manual review <span>→</span></a></div>
+        <div class="card"><h3>A label you can't take at face value</h3><p>SEC's bankruptcy tag (8-K Item 1.03) includes mis-tags (AT&amp;T, 2012), sister-company filings and subsidiary-only cases. Each filing's text is now classified before it becomes a label (≈88% precision on a fresh hand-checked sample).</p><a class="ev" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform/blob/main/reports/item_103_review.md">Manual review <span>→</span></a></div>
         <div class="card"><h3>A disappearing data series</h3><p>FRED now serves only 3 years of the high-yield credit spread, too short to train on. It was replaced by Moody's Baa spread, which goes back to 1986.</p></div>
         <div class="card"><h3>Thousands vs. units</h3><p>Early-XBRL filings (e.g. TrueBlue, TTEC) reported values 1,000× too small. They're caught by comparing to stable neighboring quarters.</p></div>
         <div class="card"><h3>…but not every jump is an error</h3><p>BioCardia's reverse merger looked like a scale slip and was a genuine restatement. The rule was tightened so real history isn't thrown away.</p></div>
@@ -419,7 +448,7 @@
         <div class="card"><h3>Tenant isolation</h3><p>Postgres row-level security on every customer table, with tests proving one lender can never read another's data.</p></div>
         <div class="card"><h3>History is append-only</h3><p>Metrics, predictions, feedback and audit logs reject updates, deletes and truncation at the database level.</p></div>
         <div class="card"><h3>Safe to re-run</h3><p>Every job is idempotent; a full rebuild followed by a second run adds zero rows.</p></div>
-        <div class="card"><h3><span data-count="222">222</span> tests in CI</h3><p>Lint, strict type checks and tests on every pull request, plus migrations applied to a real Supabase database.</p><a class="ev" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions">CI runs <span>→</span></a></div>
+        <div class="card"><h3><span data-count="249">249</span> tests in CI</h3><p>Lint, strict type checks and tests on every pull request, plus migrations applied to a real Supabase database.</p><a class="ev" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions">CI runs <span>→</span></a></div>
         <div class="card"><h3>Config, not code</h3><p>Tag mappings, event codes, sector exclusions and model names live in versioned config.</p></div>
       </div>
     </div>
@@ -428,9 +457,9 @@
   <section id="roadmap" class="alt">
     <div class="wrap reveal">
       <p class="kicker">Roadmap</p>
-      <h2>Halfway there, phase by phase</h2>
+      <h2>Five of eight phases shipped</h2>
       <p class="sub">Each phase ships with acceptance tests before the next one starts.</p>
-      <div class="progress" aria-label="4 of 8 phases complete"><i></i></div>
+      <div class="progress" aria-label="5 of 8 phases complete"><i></i></div>
       <table>
         <thead><tr><th>Phase</th><th class="hide-sm">Scope</th><th>Status</th></tr></thead>
         <tbody>
@@ -438,8 +467,8 @@
           <tr><td>1 · Ingestion</td><td class="hide-sm">SEC + FRED clients, dev sample, bankruptcy scan</td><td><span class="status done">Done</span></td></tr>
           <tr><td>2 · Canonical model</td><td class="hide-sm">Point-in-time financials, quarters, restatements</td><td><span class="status done">Done</span></td></tr>
           <tr><td>3 · Entity resolution</td><td class="hide-sm">Upload, matching cascade, review queue</td><td><span class="status done">Done</span></td></tr>
-          <tr><td>4 · Models</td><td class="hide-sm">Features, labels, Altman / logistic / LightGBM, SHAP, model card</td><td><span class="status wip">In progress</span></td></tr>
-          <tr><td>5 · LLM signals</td><td class="hide-sm">Risk signals from filing text, Q&amp;A with citations</td><td><span class="status planned">Planned</span></td></tr>
+          <tr><td>4 · Models</td><td class="hide-sm">Features, labels, Altman / logistic / LightGBM, SHAP, model card</td><td><span class="status done">Done</span></td></tr>
+          <tr><td>5 · LLM signals</td><td class="hide-sm">Risk signals from filing text, Q&amp;A with citations</td><td><span class="status wip">Next</span></td></tr>
           <tr><td>6 · App</td><td class="hide-sm">API and analyst console (live demo)</td><td><span class="status planned">Planned</span></td></tr>
           <tr><td>7 · Hosting</td><td class="hide-sm">Supabase, scheduled jobs, drift monitoring, alerts</td><td><span class="status planned">Planned</span></td></tr>
         </tbody>

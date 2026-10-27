@@ -7,10 +7,12 @@ dependencies = [
     "polars>=2.0.0",
     "rapidfuzz>=3.14.6",
     "tripwire-common",
+    "tripwire-ingest",
 ]
 
 [tool.uv.sources]
 tripwire-common = { workspace = true }
+tripwire-ingest = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
