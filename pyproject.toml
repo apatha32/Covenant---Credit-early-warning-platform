@@ -65,6 +65,7 @@ mypy_path = [
     "tests/ingest",
     "tests/pipeline",
     "tests/entity",
+    "tests/db",
 ]
 
 [[tool.mypy.overrides]]

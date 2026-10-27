@@ -6,15 +6,13 @@ and supabase-js reach the database. Seed data is inserted as superuser (bypasses
 
 from __future__ import annotations
 
-import json
 import uuid
-from collections.abc import Iterator
-from contextlib import contextmanager
 from dataclasses import dataclass
 
 import psycopg
 import pytest
 from psycopg import sql
+from rls_helpers import acting_as, denied
 
 pytestmark = pytest.mark.db
 
@@ -76,8 +74,8 @@ def _seed_tenant(conn: psycopg.Connection, name: str, member: uuid.UUID) -> Tena
     )
     borrower_id = _one(
         conn,
-        """insert into app.portfolio_borrower (tenant_id, portfolio_id, cik, uploaded_name)
-           values (%s, %s, %s, 'Apple') returning id""",
+        """insert into app.portfolio_borrower (tenant_id, portfolio_id, cik, uploaded_name,
+             match_status) values (%s, %s, %s, 'Apple', 'confirmed') returning id""",
         [tenant_id, portfolio_id, CIK],
     )
     conn.execute(
@@ -129,30 +127,6 @@ def world(db: psycopg.Connection) -> World:
     _member(db, victor, a.tenant_id, "viewer")
     _member(db, bob, b.tenant_id, "owner")
     return World(a, b, alice, ada, victor, bob, nobody)
-
-
-@contextmanager
-def acting_as(
-    conn: psycopg.Connection, user: uuid.UUID | None, role: str = "authenticated"
-) -> Iterator[None]:
-    """Run statements as a Supabase client role, with a JWT for `user`.
-
-    Uses a savepoint so an expected error inside the block leaves the connection usable.
-    """
-    claims = json.dumps({"sub": str(user), "role": role}) if user else ""
-    with conn.transaction():
-        conn.execute(sql.SQL("set local role {}").format(sql.Identifier(role)))
-        conn.execute("select set_config('request.jwt.claims', %s, true)", [claims])
-        yield
-        conn.execute("reset role")
-        conn.execute("select set_config('request.jwt.claims', '', true)")
-
-
-@contextmanager
-def denied(conn: psycopg.Connection) -> Iterator[None]:
-    """Expect permission denied / RLS violation (SQLSTATE 42501)."""
-    with pytest.raises(psycopg.errors.InsufficientPrivilege), conn.transaction():
-        yield
 
 
 def _visible_tenants(conn: psycopg.Connection, table: str, column: str) -> list[uuid.UUID]:
@@ -210,14 +184,16 @@ def test_anon_has_no_access(db: psycopg.Connection, world: World, table: str) ->
     "table",
     [
         "raw.ingest_runs",
+        "raw.source_files",
         "staging.facts",
-        "curated.company",
-        "curated.financial_metric",
-        "ml.prediction",
+        "staging.filings",
+        "curated.macro_series",
+        "curated.text_signal",
         "ml.feature_snapshot",
+        "ml.label",
     ],
 )
-def test_authenticated_cannot_read_pipeline_schemas(
+def test_authenticated_cannot_read_pipeline_tables(
     db: psycopg.Connection, world: World, table: str
 ) -> None:
     schema, name = table.split(".")
@@ -225,6 +201,56 @@ def test_authenticated_cannot_read_pipeline_schemas(
         db.execute(
             sql.SQL("select 1 from {}.{}").format(sql.Identifier(schema), sql.Identifier(name))
         )
+
+
+@pytest.mark.parametrize(
+    "table",
+    ["curated.company", "curated.financial_metric", "curated.filing_event",
+     "curated.bankruptcy_case", "ml.prediction"],
+)  # fmt: skip
+def test_shared_data_is_limited_to_own_portfolio_companies(
+    db: psycopg.Connection, world: World, table: str
+) -> None:
+    other = "0000000002"  # a company no tenant holds
+    db.execute("insert into curated.company (cik, name) values (%s, 'Other Co')", [other])
+    _seed_company_data(db, CIK)
+    _seed_company_data(db, other)
+    query = sql.SQL("select distinct cik from {}").format(sql.SQL(table))
+    with acting_as(db, world.alice):
+        assert [r[0] for r in db.execute(query)] == [CIK]
+    with acting_as(db, world.nobody):
+        assert db.execute(query).fetchall() == []
+
+
+def _seed_company_data(conn: psycopg.Connection, cik: str) -> None:
+    accession = f"{cik}-24-000001"
+    conn.execute(
+        """insert into curated.financial_metric (cik, canonical_metric, period_type, period_end,
+             unit, value, source_tag, filed_date, accession, version, mapping_version)
+           values (%s, 'cash', 'Q', '2024-03-31', 'USD', 1, 'us-gaap:Cash', '2024-05-01', %s, 1,
+                   '2')""",
+        [cik, accession],
+    )
+    conn.execute(
+        """insert into curated.filing_event (cik, accession, event_type, filed_date, form_type)
+           values (%s, %s, 'auditor_change', '2024-05-01', '8-K')""",
+        [cik, accession],
+    )
+    conn.execute(
+        """insert into curated.bankruptcy_case (cik, case_start, accession, label_version)
+           values (%s, '2024-06-01', %s, 'v6')""",
+        [cik, accession],
+    )
+    model = conn.execute(
+        """insert into ml.model_version (algo, feature_set_version, train_window)
+           values ('lightgbm', 'v1', '[2011-01-01,2019-01-01)') returning id"""
+    ).fetchone()
+    assert model is not None
+    conn.execute(
+        """insert into ml.prediction (cik, as_of_date, model_version_id, probability, risk_tier)
+           values (%s, '2024-03-31', %s, 0.1, 'high')""",
+        [cik, model[0]],
+    )
 
 
 # --- writes ---

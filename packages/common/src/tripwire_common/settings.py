@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     supabase_url: str | None = None
     supabase_anon_key: SecretStr | None = None
     supabase_service_role_key: SecretStr | None = None
+    supabase_storage_bucket: str = "tripwire"
     database_url: SecretStr | None = None
 
     @field_validator("tripwire_config_dir", "tripwire_data_dir")

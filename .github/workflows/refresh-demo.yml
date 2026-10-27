@@ -1,0 +1,46 @@
+name: refresh-demo
+
+# Weekly: refresh SEC data for the 50 demo companies through the per-company API (not the bulk
+# files), plus FRED, then re-score them as of the run date with the active model and write new
+# predictions. Every step logs a raw.ingest_runs row in Supabase. A failed run fails this job,
+# and GitHub emails a failure notification (Settings > Notifications > Actions).
+on:
+  schedule:
+    - cron: "17 6 * * 1" # Mondays 06:17 UTC
+  workflow_dispatch:
+    inputs:
+      as_of:
+        description: "Score as of this date (YYYY-MM-DD). Empty = today."
+        required: false
+        default: ""
+
+concurrency:
+  group: refresh-demo
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TRIPWIRE_ENV: prod
+      TRIPWIRE_STORAGE: supabase
+      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --all-packages --locked
+      - name: Refresh and re-score the demo portfolio
+        env:
+          AS_OF: ${{ inputs.as_of }}
+        run: uv run python -m tripwire_ml demo-refresh ${AS_OF:+--as-of "$AS_OF"}

@@ -1,0 +1,135 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* Dark mode: the `dark` class on <html>, set before paint from the saved choice or the system
+   setting (see layout.tsx). */
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  /* Covenant palette (same as the project site, docs/index.html) */
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-risk: var(--risk);
+  --color-risk-soft: var(--risk-soft);
+  --color-surface-2: var(--bg-2);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: #fbfaf7;
+  --bg-2: #f5f2ec;
+  --foreground: #1c1917;
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+  --popover: #ffffff;
+  --popover-foreground: #1c1917;
+  --primary: #1c1917;
+  --primary-foreground: #fbfaf7;
+  --secondary: #f5f2ec;
+  --secondary-foreground: #1c1917;
+  --muted: #f5f2ec;
+  --muted-foreground: #57534e;
+  --accent: #f5f2ec;
+  --accent-foreground: #1c1917;
+  --destructive: #b91c1c;
+  --border: #e7e5e4;
+  --input: #e7e5e4;
+  --ring: #b45309;
+  --brand: #b45309;
+  --brand-ink: #ffffff;
+  --brand-soft: #fef3c7;
+  --ok: #15803d;
+  --ok-soft: #dcfce7;
+  --risk: #b91c1c;
+  --risk-soft: #fee2e2;
+  --chart-line: #b45309;
+  --chart-grid: #e7e5e4;
+}
+
+.dark {
+  --background: #12100e;
+  --bg-2: #171412;
+  --foreground: #f5f5f4;
+  --card: #1c1917;
+  --card-foreground: #f5f5f4;
+  --popover: #1c1917;
+  --popover-foreground: #f5f5f4;
+  --primary: #f5f5f4;
+  --primary-foreground: #12100e;
+  --secondary: #171412;
+  --secondary-foreground: #f5f5f4;
+  --muted: #171412;
+  --muted-foreground: #a8a29e;
+  --accent: #26221f;
+  --accent-foreground: #f5f5f4;
+  --destructive: #f87171;
+  --border: #2e2a27;
+  --input: #2e2a27;
+  --ring: #f59e0b;
+  --brand: #f59e0b;
+  --brand-ink: #1c1917;
+  --brand-soft: #3a2a0a;
+  --ok: #4ade80;
+  --ok-soft: #12301d;
+  --risk: #f87171;
+  --risk-soft: #3b1414;
+  --chart-line: #f59e0b;
+  --chart-grid: #2e2a27;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+/* Model card markdown */
+.prose-card h1 { font-size: 1.875rem; font-weight: 750; letter-spacing: -0.02em; margin: 0 0 0.75rem; }
+.prose-card h2 { font-size: 1.25rem; font-weight: 700; margin: 2.25rem 0 0.75rem; }
+.prose-card p, .prose-card li { color: var(--muted-foreground); line-height: 1.65; }
+.prose-card p { margin: 0.75rem 0; }
+.prose-card ul { list-style: disc; padding-left: 1.25rem; margin: 0.75rem 0; }
+.prose-card strong { color: var(--foreground); }
+.prose-card code { font-family: var(--font-mono); font-size: 0.85em; background: var(--muted); padding: 0.1em 0.35em; border-radius: 0.35em; }
+.prose-card .table-wrap { overflow-x: auto; margin: 1rem 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
+.prose-card table { width: 100%; border-collapse: collapse; font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+.prose-card th { text-align: left; font-weight: 650; background: var(--bg-2); white-space: nowrap; }
+.prose-card th, .prose-card td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+.prose-card tr:last-child td { border-bottom: 0; }
