@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime as dt
 from pathlib import Path
 from typing import Any, Literal
 
@@ -33,9 +34,42 @@ class EmbeddingConfig(_Strict):
     dimensions: int = Field(gt=0)
 
 
+class DateRange(_Strict):
+    start: dt.date
+    end: dt.date
+
+
+class Splits(_Strict):
+    train: DateRange
+    validation: DateRange
+    test: DateRange
+
+
+class Tiers(_Strict):
+    high: float = Field(gt=0, lt=1)
+    elevated: float = Field(gt=0, lt=1)
+
+
+class LightGBMConfig(_Strict):
+    learning_rate: float
+    num_leaves: int
+    min_data_in_leaf: int
+    feature_fraction: float
+    bagging_fraction: float
+    bagging_freq: int
+    lambda_l2: float
+    max_rounds: int
+    early_stopping_rounds: int
+
+
 class MLConfig(_Strict):
     random_seed: int
     primary_metric: str
+    splits: Splits
+    first_as_of: dt.date
+    tiers: Tiers
+    lightgbm: LightGBMConfig
+    logistic_c_grid: list[float]
 
 
 class ModelsConfig(_Strict):
@@ -111,12 +145,37 @@ class SecondaryTextSignal(_Strict):
     min_confidence: float = Field(ge=0, le=1)
 
 
+class TextCheck(_Strict):
+    version: int
+    section_heading: str
+    section_start: str
+    section_end: str
+    event_terms: str
+    filing_verbs: str
+    receivership: str
+    previously_disclosed: str
+    follow_up: str
+    ends_case: str
+    registrant: str
+    weak_registrant: str
+    subsidiary: str
+    subsidiary_of: str
+    parent_with_subsidiaries: str
+    hedged: str
+    negated: str
+    new_case_max_days: int = Field(gt=0)
+    positive_kinds: list[str]
+    max_case_months: int = Field(gt=0)
+    infer_case_lookback_months: int = Field(gt=0)
+
+
 class Labels(_Strict):
     version: int
     horizon_months: int = Field(gt=0)
     primary_events: list[str] = Field(min_length=1)
     secondary_events: list[SecondaryEvent] = Field(default_factory=list)
     secondary_text_signals: list[SecondaryTextSignal] = Field(default_factory=list)
+    text_check: TextCheck | None = None
 
 
 class MacroSeriesSpec(_Strict):
@@ -290,6 +349,7 @@ class SecSourceConfig(HttpSourceConfig):
     submissions_url: str
     submissions_page_url: str
     companyfacts_url: str
+    document_url: str
     bulk_submissions_url: str
     bulk_companyfacts_url: str
 

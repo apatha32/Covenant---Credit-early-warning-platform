@@ -193,6 +193,7 @@ Schemas, in data-flow order:
 - **Label for (cik, T):** 1 if a positive event is filed within (T, T + 12 months].
 - **Training universe:** All non-excluded XBRL filers 2010–present (wide universe for enough positives). The served watchlist = tenant portfolios only.
 - **Class imbalance is severe.** Handle with class weights; never random oversampling across time.
+- **Implemented (Phase 4, 2026-10-26):** each Item 1.03 8-K is classified from its text (own petition, receivership, subsidiary-only, sister-company joint filing, follow-up, mis-tag, unclear) by rules in `config/domain/finance/labels.yaml`; petitions and follow-ups are grouped into bankruptcy cases (a confirmation ends a case; a confirmation with no petition on file starts an inferred case). label(cik, T) = 1 if a case starts in (T, T+12m]; rows inside an open case are excluded. Hand review of a fresh sample estimates ≈ 88% label precision.
 
 ---
 
@@ -210,7 +211,8 @@ Schemas, in data-flow order:
 ## 8. Modeling
 
 - **Splits:** Strictly time-based (e.g., train ≤ 2019, validate 2020–2021, test 2022+). Also run a rolling-origin backtest.
-- **Models:** (a) Altman Z-score rule baseline, (b) logistic regression, (c) LightGBM. Report all three side by side.
+  *(Phase 4: the year ranges are read as label-window years, so as-of dates are train 2011–2018, validation 2020, test Dec 2021–Sep 2025; as-of dates in 2019 and early 2021 are left out so label windows never overlap. Split dates live in `config/models.yaml`.)*
+- **Models:** (a) Altman Z-score rule baseline, (b) logistic regression, (c) LightGBM. Report all three side by side. *(Phase 4: with book values only, the baseline is Altman Z'' (book-equity variant). SHAP uses LightGBM's exact TreeSHAP contributions.)*
 - **Metrics:** PR-AUC (primary), recall@top-5% and top-10% of the risk ranking, Brier score + calibration curve, median lead time (months before the event that the company first entered the top tier).
 - **Calibration:** isotonic or Platt on the validation set, so probabilities are meaningful.
 - **Explanations:** SHAP top-5 drivers per prediction, translated to plain English ("Interest coverage fell from 3.1x to 0.8x").

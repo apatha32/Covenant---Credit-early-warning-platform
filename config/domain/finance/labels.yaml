@@ -12,3 +12,52 @@ secondary_events:
 
 secondary_text_signals:
   - { signal_type: going_concern, enabled: false, min_confidence: 0.8 }
+
+# Text check for primary-label filings (8-K Item 1.03). The tag alone is noisy (mis-tags,
+# sister-company joint filings, subsidiary-only cases, follow-up filings; see
+# reports/item_103_review.md), so each filing's Item 1.03 section is classified. Patterns are
+# case-insensitive regular expressions applied to the section text.
+text_check:
+  version: 6
+  # The Item 1.03 section is found by its heading; plain "Item 1.03" mentions are usually
+  # cross-references ("the information in Item 1.03 below is incorporated by reference").
+  section_heading: 'item\s*1\.03\W{0,5}bankruptcy\s*or\s*receivership'
+  section_start: 'item\s*1\.03(?!\W{0,3}(?:of|above|below|herein|in\s+this))'
+  # Case-sensitive: a real heading ("Item 2.02. Results of ..."), not a cross-reference
+  # ("as described in Item 1.01 above").
+  section_end: '\b[Ii]tem\s*\d\.\d{2}\.?\s*[-–—:]?\s*[A-Z][a-z]|\bSIGNATURES?\b|\bSignatures?\b'
+  # A petition / receivership sentence: an event term plus a filing verb.
+  # Petition wording specifically (generic "chapter 11" also appears in plan / motion sentences).
+  event_terms: 'petitions?\b(?!\s*date)|voluntary\s*cases?|(?:voluntary|involuntary)\s*(?:chapter\s*(?:11|7|15)\s*)?proceedings?|(?:commenced|filed|file)\s*(?:the\s*|their\s*|its\s*)?(?:jointly\s*administered\s*)?(?:chapter\s*(?:11|7|15)\s*)?(?:cases?|proceedings?)\b|bankruptcy\s*filing|filed\s*for\s*(?:chapter|bankruptcy|relief|protection)|entered\s*into\s*administration|insolvency\s*proceedings?'
+  filing_verbs: '\b(?:filed|commenced|file|filing|entered into administration|placed into)\b'
+  receivership: '\breceiver\b.{0,120}\bappointed\b|\bappointed\b.{0,120}\breceiver\b'
+  # The filing is about a case that already exists (it is not a new event).
+  previously_disclosed: 'previously (?:disclosed|reported|announced)|as (?:disclosed|reported) (?:in|on)'
+  follow_up: 'order\s*confirming|confirmation\s*order|order\s*approving\s*(?:and\s*confirming\s*)?the\s*(?:[\w’-]+\s*){0,5}plan|confirming\s*(?:and\s*approving\s*)?the\s*(?:[\w’-]+\s*){0,5}plan|confirmed\s*(?:the\s*)?(?:[\w’-]+\s*){0,5}plan|entered\s*(?:an|the|its)\s*order.{0,160}confirm|plan\s*(?:became|has become|becomes)\s*effective|effective\s*date\s*(?:of\s*the\s*plan\s*)?occurred|emerged?\s*from\s*(?:chapter\s*11|bankruptcy)|final\s*decree|dismiss(?:ed|al)\s*(?:of\s*)?the\s*(?:[\w-]+\s*){0,4}(?:cases?|chapter)|converted.{0,60}chapter\s*7'
+  # Follow-ups that end the case. Confirmation counts: the plan's effective date (emergence)
+  # usually follows within weeks and is rarely filed under Item 1.03.
+  ends_case: 'order\s*confirming|confirmation\s*order|order\s*approving\s*(?:and\s*confirming\s*)?the\s*(?:[\w’-]+\s*){0,5}plan|confirming\s*(?:and\s*approving\s*)?the\s*(?:[\w’-]+\s*){0,5}plan|confirmed\s*(?:the\s*)?(?:[\w’-]+\s*){0,5}plan|entered\s*(?:an|the|its)\s*order.{0,160}confirm|plan\s*(?:became|has become|becomes)\s*effective|effective\s*date\s*(?:of\s*the\s*plan\s*)?occurred|emerged?\s*from\s*(?:chapter\s*11|bankruptcy)|final\s*decree|dismiss(?:ed|al)\s*(?:of\s*)?the\s*(?:[\w-]+\s*){0,4}(?:cases?|chapter)'
+  # Words that refer to the filer itself. Applied after quotes are removed, so
+  # 'Acme Inc. (the "Company")' matches.
+  registrant: '\b(?:the\s*company|the\s*registrant|the\s*corporation|company\s*parties|we|our|us)\b'
+  # Refers to the filer only together with its subsidiaries; ignored when the sentence says the
+  # debtors are the company's subsidiaries.
+  weak_registrant: '\b(?:the\s*)?debtors\b|\bdebtor\s*entities\b'
+  subsidiary: '\bsubsidiar(?:y|ies)\b'
+  # "subsidiaries of the Company", "the Registrant's wholly owned subsidiary": subsidiary-only.
+  subsidiary_of: '\bsubsidiar(?:y|ies)\s*of\s*[^,;]{0,80}|\b(?:company|registrant|corporation)[’s]*\s*(?:[\w-]+\s*){0,3}subsidiar(?:y|ies)\b'
+  # "Acme and certain of its subsidiaries filed": the parent's own petition.
+  parent_with_subsidiaries: '\b(?:and|together\s*with|along\s*with|collectively\s*with)\b.{0,50}\b(?:its|their|certain)\b.{0,60}\bsubsidiar(?:y|ies)\b'
+  # Sentences that only speculate (forward-looking boilerplate) are never petitions.
+  hedged: 'forward-looking|risks?\s*(?:attendant|related|associated|relating)|uncertaint'
+  # Denials ("neither the Company nor ... filed") are not petitions.
+  negated: '\bneither\b|\bnone\s*of\b|\b(?:has|have|had|did|does|do)\s*not\s*(?:filed|commenced|file|commence)\b'
+  # A petition sentence dated this close before the 8-K is a new case; older = a restatement.
+  new_case_max_days: 30
+  # Classes that count as the positive event. `unclear` is included on purpose (conservative);
+  # its count is reported so it can be reviewed.
+  positive_kinds: [petition, receivership, inferred_from_follow_up, unclear]
+  # In-bankruptcy rows are excluded from training until the case ends, at most this long.
+  max_case_months: 36
+  # A follow-up with no petition on file in this many months implies an untagged petition.
+  infer_case_lookback_months: 24

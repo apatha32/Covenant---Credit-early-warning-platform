@@ -20,3 +20,24 @@ embedding:
 ml:
   random_seed: 42
   primary_metric: pr_auc
+  # Splits by as-of date. Each row's label looks 12 months ahead, so the gaps (2019, early 2021)
+  # keep label windows of different splits from overlapping: train labels end by 2019,
+  # validation labels fall in 2020-2021, test labels in 2022 and later.
+  splits:
+    train: { start: "2011-03-31", end: "2018-12-31" }
+    validation: { start: "2020-03-31", end: "2020-12-31" }
+    test: { start: "2021-12-31", end: "2025-09-30" }
+  first_as_of: "2011-03-31"
+  # Risk tiers by rank within each as-of date (stable across years with different base rates).
+  tiers: { high: 0.05, elevated: 0.15 }
+  lightgbm:
+    learning_rate: 0.03
+    num_leaves: 31
+    min_data_in_leaf: 100
+    feature_fraction: 0.8
+    bagging_fraction: 0.8
+    bagging_freq: 1
+    lambda_l2: 1.0
+    max_rounds: 3000
+    early_stopping_rounds: 200
+  logistic_c_grid: [0.01, 0.1, 1.0]
