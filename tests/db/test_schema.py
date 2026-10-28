@@ -10,8 +10,11 @@ import pytest
 
 pytestmark = pytest.mark.db
 
-OUR_SCHEMAS = ("util", "raw", "staging", "curated", "ml", "app")
+OUR_SCHEMAS = ("util", "raw", "staging", "curated", "ml", "app", "api")
 PIPELINE_SCHEMAS = ("raw", "staging", "curated", "ml")
+# Shared data the console reads; row policies limit it to the caller's portfolio companies.
+CONSOLE_READABLE = {"curated.company", "curated.financial_metric", "curated.filing_event",
+                    "curated.bankruptcy_case", "ml.prediction", "ml.model_version"}  # fmt: skip
 
 
 def test_all_schemas_exist(db: psycopg.Connection) -> None:
@@ -59,14 +62,39 @@ def test_anon_has_no_table_privileges(db: psycopg.Connection) -> None:
     assert rows == []
 
 
-def test_authenticated_has_no_pipeline_table_privileges(db: psycopg.Connection) -> None:
+def test_authenticated_only_reads_console_tables_in_pipeline_schemas(
+    db: psycopg.Connection,
+) -> None:
     rows = db.execute(
         """select table_schema || '.' || table_name, privilege_type
            from information_schema.role_table_grants
            where grantee = 'authenticated' and table_schema = any(%s)""",
         [list(PIPELINE_SCHEMAS)],
     ).fetchall()
-    assert rows == []
+    assert {r[1] for r in rows} == {"SELECT"}
+    assert {r[0] for r in rows} == CONSOLE_READABLE
+
+
+def test_console_tables_have_select_policies(db: psycopg.Connection) -> None:
+    for table in CONSOLE_READABLE:
+        schema, name = table.split(".")
+        row = db.execute(
+            """select count(*) from pg_policies where schemaname = %s and tablename = %s
+               and cmd = 'SELECT' and 'authenticated' = any(roles)""",
+            [schema, name],
+        ).fetchone()
+        assert row and row[0] == 1, f"{table} needs one select policy"
+
+
+def test_api_views_run_as_the_caller(db: psycopg.Connection) -> None:
+    rows = db.execute(
+        """select c.relname, coalesce(c.reloptions, '{}')
+           from pg_class c join pg_namespace n on n.oid = c.relnamespace
+           where n.nspname = 'api'"""
+    ).fetchall()
+    assert rows
+    for name, options in rows:
+        assert "security_invoker=true" in options, f"api.{name} must be security_invoker"
 
 
 def test_security_definer_functions_pin_search_path(db: psycopg.Connection) -> None:

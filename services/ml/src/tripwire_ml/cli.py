@@ -4,6 +4,9 @@
     uv run python -m tripwire_ml labels      # classify Item 1.03 8-Ks, build bankruptcy cases
     uv run python -m tripwire_ml dataset     # point-in-time features + labels, quarterly
     uv run python -m tripwire_ml train       # 3 models, evaluation, backtest, model card
+    uv run python -m tripwire_ml demo-export # hosted demo bundle (see tripwire_ml.serve)
+    uv run python -m tripwire_ml demo-seed   # load it into DATABASE_URL / TRIPWIRE_STORAGE
+    uv run python -m tripwire_ml demo-refresh  # weekly: refresh SEC data, re-score as of today
 """
 
 from __future__ import annotations
@@ -176,7 +179,17 @@ def main(argv: list[str] | None = None) -> None:
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("command", choices=["labels", "dataset", "train"])
+    parser.add_argument(
+        "command", choices=["labels", "dataset", "train", "demo-export", "demo-seed",
+                            "demo-refresh"],
+    )  # fmt: skip
+    parser.add_argument(
+        "--skip-refresh",
+        action="store_true",
+        help="demo-seed / demo-refresh: do not re-fetch SEC and FRED data",
+    )
+    parser.add_argument("--as-of", type=dt.date.fromisoformat,
+                        help="demo-refresh: score as of this date (default: today)")  # fmt: skip
     args = parser.parse_args(argv)
     settings = get_settings()
     configure_logging("ml")
@@ -191,3 +204,15 @@ def main(argv: list[str] | None = None) -> None:
             from tripwire_ml.report import cmd_train
 
             cmd_train(ctx)
+        elif args.command == "demo-export":
+            from tripwire_ml.serve import cmd_demo_export
+
+            cmd_demo_export(ctx)
+        elif args.command == "demo-seed":
+            from tripwire_ml.serve import cmd_demo_seed
+
+            cmd_demo_seed(ctx, args.skip_refresh)
+        elif args.command == "demo-refresh":
+            from tripwire_ml.serve import cmd_demo_refresh
+
+            cmd_demo_refresh(ctx, args.as_of, args.skip_refresh)

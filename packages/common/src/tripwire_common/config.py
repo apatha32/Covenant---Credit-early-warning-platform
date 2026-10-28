@@ -407,6 +407,38 @@ def load_dev_sample(pack: DomainPack) -> DevSample:
     return DevSample.model_validate(_read_yaml(dev_sample_path(pack)))
 
 
+# --- <pack>/demo_portfolio.yaml (scripts/build_demo_portfolio.py) ---
+
+
+class DemoCompany(_Strict):
+    cik: int
+    name: str
+    group: Literal["bankruptcy", "healthy"]
+    case_start: str | None = None
+
+
+class DemoStory(_Strict):
+    cik: int
+    as_of: str
+
+
+class DemoPortfolio(_Strict):
+    version: int
+    generated_on: str
+    criteria: str
+    tenant: str
+    portfolio: str
+    story: DemoStory
+    companies: list[DemoCompany]
+
+    def ciks(self) -> list[str]:
+        return [f"{c.cik:010d}" for c in self.companies]
+
+
+def load_demo_portfolio(pack: DomainPack) -> DemoPortfolio:
+    return DemoPortfolio.model_validate(_read_yaml(pack.directory / "demo_portfolio.yaml"))
+
+
 # --- config/entity_resolution.yaml ---
 
 

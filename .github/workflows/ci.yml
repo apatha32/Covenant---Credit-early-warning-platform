@@ -39,6 +39,23 @@ jobs:
       - name: Test
         run: uv run pytest
 
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npm run build
+
   # Applies the migrations to the real Supabase Postgres image (no shim), so drift between
   # supabase/local/supabase_shim.sql and actual Supabase is caught.
   supabase-migrations:

@@ -2,7 +2,8 @@
 
 Paths are relative, '/'-separated keys (e.g. 'sec/submissions/cik=0000320193/sha256=.../x.parquet').
 Raw data is append-only: writing a key that already holds different bytes is an error.
-Only a local backend exists for now; Supabase Storage plugs in behind the same interface.
+Backends: LocalStorage (a directory, for development) and SupabaseStorage (a private bucket,
+for the hosted demo and its scheduled refresh).
 """
 
 from __future__ import annotations
@@ -11,6 +12,8 @@ import os
 import tempfile
 from pathlib import Path, PurePosixPath
 from typing import Protocol
+
+import httpx
 
 from tripwire_common.settings import ConfigError, Settings, get_settings
 
@@ -91,8 +94,80 @@ class LocalStorage:
         return self._path(key).as_uri()
 
 
+class SupabaseStorage:
+    """Objects in one private Supabase Storage bucket, reached with the service-role key.
+    Same append-only rule as LocalStorage. local_path() downloads into a local cache."""
+
+    def __init__(self, url: str, service_key: str, bucket: str, cache_dir: Path,
+                 transport: httpx.BaseTransport | None = None) -> None:  # fmt: skip
+        self.bucket = bucket
+        self.cache_dir = cache_dir
+        self.client = httpx.Client(
+            base_url=f"{url.rstrip('/')}/storage/v1",
+            headers={"Authorization": f"Bearer {service_key}", "apikey": service_key},
+            timeout=httpx.Timeout(120, connect=10),
+            transport=transport,
+        )
+
+    def _object(self, key: str) -> str:
+        return f"/object/{self.bucket}/{_check_key(key)}"
+
+    def ensure_bucket(self) -> None:
+        r = self.client.post("/bucket", json={"id": self.bucket, "name": self.bucket,
+                                               "public": False})  # fmt: skip
+        if r.status_code not in (200, 201) and "already exists" not in r.text.lower():
+            raise StorageError(f"cannot create bucket {self.bucket}: {r.status_code} {r.text}")
+
+    def _upload(self, key: str, content: bytes) -> None:
+        r = self.client.post(self._object(key), content=content,
+                             headers={"Content-Type": "application/octet-stream",
+                                      "x-upsert": "false"})  # fmt: skip
+        if r.status_code in (200, 201):
+            return
+        if r.status_code in (400, 409) and "exist" in r.text.lower():
+            if self.read_bytes(key) == content:
+                return
+            raise StorageError(f"refusing to overwrite existing object with new content: {key}")
+        raise StorageError(f"upload failed for {key}: {r.status_code} {r.text}")
+
+    def write_bytes(self, key: str, data: bytes) -> None:
+        self._upload(key, data)
+
+    def write_file(self, key: str, source: Path) -> None:
+        self._upload(key, source.read_bytes())
+        source.unlink()
+
+    def read_bytes(self, key: str) -> bytes:
+        r = self.client.get(self._object(key))
+        if r.status_code in (400, 404):
+            raise StorageError(f"no such object: {key}")
+        r.raise_for_status()
+        return r.content
+
+    def exists(self, key: str) -> bool:
+        r = self.client.head(self._object(key))
+        return r.status_code == 200
+
+    def local_path(self, key: str) -> Path:
+        path = self.cache_dir / self.bucket / Path(*_check_key(key).parts)
+        if not path.is_file():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(self.read_bytes(key))
+        return path
+
+    def uri(self, key: str) -> str:
+        return f"supabase://{self.bucket}/{_check_key(key)}"
+
+
 def get_storage(settings: Settings | None = None) -> Storage:
     settings = settings or get_settings()
     if settings.tripwire_storage == "local":
         return LocalStorage(settings.tripwire_data_dir)
-    raise ConfigError(f"storage backend {settings.tripwire_storage!r} is not implemented yet")
+    if settings.tripwire_storage == "supabase":
+        return SupabaseStorage(
+            settings.require("supabase_url"),
+            settings.require("supabase_service_role_key"),
+            settings.supabase_storage_bucket,
+            settings.tripwire_data_dir / ".storage-cache",
+        )
+    raise ConfigError(f"unknown storage backend {settings.tripwire_storage!r}")
