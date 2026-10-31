@@ -77,7 +77,8 @@ flowchart LR
 | 3 | Entity resolution: upload, matching, review queue | ✅ Done |
 | 4 | Features, labels, Altman / logistic / LightGBM models, SHAP, model card | ✅ Done |
 | 5 | LLM risk signals from filing text, Q&A with citations | Next |
-| 6 | API + analyst console | Planned |
+| 6a | Analyst console + read-only public demo ([PR #11](https://github.com/apatha32/Covenant---Credit-early-warning-platform/pull/11)) | Built, going live |
+| 6b | API, borrower upload and review, alerts | Planned |
 | 7 | Hosting (Supabase + scheduled jobs + Vercel), drift monitoring, alerts | Planned |
 
 **Stack:** Python 3.12, Polars, PostgreSQL / Supabase (RLS, Storage, pgvector), rapidfuzz,

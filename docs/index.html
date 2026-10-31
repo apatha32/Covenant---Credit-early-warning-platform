@@ -185,6 +185,47 @@
   .node span { color: var(--muted); font-size: 13px; }
   .arrow { align-self: center; color: var(--accent); font-size: 20px; flex: none; }
 
+  /* system diagram */
+  .sys { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 18px 18px 20px; }
+  .sys-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .sys svg { display: block; width: 100%; min-width: 760px; height: auto; }
+  .sys .grp { fill: var(--bg-2); stroke: var(--line); stroke-dasharray: 5 5; }
+  .sys .gl { fill: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  .sys .gs { fill: var(--muted); font-size: 11px; }
+  .sys .nd rect { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; transition: stroke .45s var(--ease), fill .45s var(--ease); }
+  .sys .nd text { fill: var(--ink); font-size: 14px; font-weight: 650; }
+  .sys .nd text.s { fill: var(--muted); font-size: 11.5px; font-weight: 500; }
+  .sys .wire { fill: none; stroke: var(--line); stroke-width: 2; transition: stroke .45s var(--ease); }
+  .sys .dot { fill: var(--accent); opacity: .3; transition: opacity .45s var(--ease); }
+  .sys [data-step] { transition: opacity .45s var(--ease); }
+  .sys.focus [data-step] { opacity: .25; }
+  .sys.focus [data-step].on { opacity: 1; }
+  .sys.focus .nd.on rect { stroke: var(--accent); fill: var(--accent-soft); }
+  .sys.focus .wire.on { stroke: var(--accent); }
+  .steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 12px; }
+  .steps button {
+    font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; padding: 7px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--muted); transition: all .25s var(--ease);
+  }
+  .steps button b { color: var(--accent); margin-right: 4px; font-variant-numeric: tabular-nums; }
+  .steps button:hover { color: var(--ink); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .steps button.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .steps button.on b { color: var(--accent); }
+  .steps .play { margin-left: auto; }
+  .caption { min-height: 96px; padding: 14px 16px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line); }
+  .caption h3 { margin: 0 0 4px; font-size: 17px; }
+  .caption p { margin: 0; color: var(--muted); }
+  .caption.swap { animation: swap .45s var(--ease); }
+  @keyframes swap { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .sys-note { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+
+  /* console */
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 8px; }
+  .shot { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow-lift); }
+  .shot img { display: block; width: 100%; height: auto; }
+  .shot figcaption { padding: 12px 14px; font-size: 14px; color: var(--muted); border-top: 1px solid var(--line); }
+  .shot figcaption b { color: var(--ink); }
+
   .cta { text-align: center; }
   .cta .buttons { justify-content: center; }
   footer { padding: 32px 0 48px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); }
@@ -207,7 +248,7 @@
     .conf .bar i { width: var(--w); } .progress i { width: 62.5%; }
   }
   @media (max-width: 860px) {
-    .hero, .example { grid-template-columns: 1fr; }
+    .hero, .example, .shots { grid-template-columns: 1fr; }
     .links { display: none; }
   }
   @media (max-width: 640px) {
@@ -228,9 +269,11 @@
     <div class="links">
       <a href="#problem">Problem</a>
       <a href="#how">How it works</a>
+      <a href="#system">System</a>
       <a href="#financials">Financials</a>
       <a href="#matching">Matching</a>
       <a href="#results">Results</a>
+      <a href="#console">Console</a>
       <a href="#roadmap">Roadmap</a>
     </div>
     <a class="nav-cta" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform">GitHub</a>
@@ -248,7 +291,7 @@
           <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           View on GitHub
         </a>
-        <span class="btn soon" aria-disabled="true" title="The analyst console is being built (Phase 6)">
+        <span class="btn soon" aria-disabled="true" title="The analyst console is built and being put online">
           <span class="pulse" aria-hidden="true"></span>
           Live demo <span class="pill">in progress</span>
         </span>
@@ -307,7 +350,7 @@
         <div class="card"><div class="step">01 · Match</div><h3>Find each borrower</h3><p>Names and tickers are resolved to SEC companies; anything uncertain goes to a reviewer, never a guess.</p></div>
         <div class="card"><div class="step">02 · Rebuild</div><h3>Clean the financials</h3><p>25 standard metrics per company, every value dated to when it became public and traced to its filing.</p></div>
         <div class="card"><div class="step">03 · Score</div><h3>Rank distress risk</h3><p>A calibrated LightGBM model scores 12-month bankruptcy risk from ratios, trends, filing behavior and macro conditions, with plain-English drivers.</p></div>
-        <div class="card"><div class="step">04 · Act</div><h3>Review and respond</h3><p>A watchlist with drill-downs, Q&amp;A over filings with citations, and agree/dismiss feedback. <em>(planned)</em></p></div>
+        <div class="card"><div class="step">04 · Act</div><h3>Review and respond</h3><p>A watchlist you can rewind to any past quarter, with a page per company showing the reasons. Q&amp;A over filings and agree/dismiss feedback come later.</p></div>
       </div>
       <div class="stack">
         <span>Python 3.12</span><span>Polars</span><span>PostgreSQL / Supabase</span><span>Row-level security</span><span>rapidfuzz</span><span>Pandera</span><span>LightGBM</span><span>Claude API</span><span>Next.js</span><span>GitHub Actions</span>
@@ -315,7 +358,94 @@
     </div>
   </section>
 
-  <section id="financials" class="alt">
+  <section id="system" class="alt">
+    <div class="wrap reveal">
+      <p class="kicker">System design</p>
+      <h2>The whole system, in one picture</h2>
+      <p class="sub">Six simple steps take public filings and turn them into a risk score you can check. The diagram walks through them one at a time. Pick a step to jump to it.</p>
+      <div class="sys" id="sys">
+        <div class="sys-scroll">
+          <svg viewBox="0 0 980 340" role="img" aria-labelledby="sys-title sys-desc">
+            <title id="sys-title">How Covenant works</title>
+            <desc id="sys-desc">Public data from the SEC and FRED is collected weekly by a GitHub Actions robot, cleaned and scored, stored in Supabase behind a security guard, and shown on a website. The model is trained once on a laptop and saved to cloud storage.</desc>
+
+            <!-- groups -->
+            <rect class="grp" x="210" y="10" width="550" height="82" rx="14"/>
+            <text class="gl" x="224" y="44">Training</text><text class="gs" x="224" y="62">once, on a laptop</text>
+            <rect class="grp" x="10" y="110" width="170" height="220" rx="14"/>
+            <text class="gl" x="24" y="129">Public data</text>
+            <rect class="grp" x="210" y="110" width="340" height="220" rx="14"/>
+            <text class="gl" x="224" y="129">Weekly robot</text><text class="gs" x="224" y="146">GitHub Actions, every Monday</text>
+            <rect class="grp" x="580" y="110" width="180" height="220" rx="14"/>
+            <text class="gl" x="594" y="129">Supabase (cloud)</text>
+            <rect class="grp" x="790" y="110" width="185" height="220" rx="14"/>
+            <text class="gl" x="804" y="129">On the web</text>
+
+            <!-- wires -->
+            <path id="w1" class="wire" data-step="1" d="M165 172 C195 172, 195 205, 225 205"/>
+            <path id="w2" class="wire" data-step="1" d="M165 268 C195 268, 195 225, 225 225"/>
+            <path id="w3" class="wire" data-step="2" d="M320 215 L335 215"/>
+            <path id="w4" class="wire" data-step="4" d="M430 215 L445 215"/>
+            <path id="w5" class="wire" data-step="4 5" d="M540 215 C567 215, 568 166, 595 166"/>
+            <path id="w6" class="wire" data-step="3" d="M95 140 C95 60, 260 50, 330 50"/>
+            <path id="w7" class="wire" data-step="3" d="M450 50 L470 50"/>
+            <path id="w8" class="wire" data-step="3" d="M600 50 L620 50"/>
+            <path id="w9" class="wire" data-step="3" d="M740 50 C772 50, 772 228, 745 228"/>
+            <path id="w10" class="wire" data-step="4" d="M650 76 C650 130, 492 120, 492 175"/>
+            <path id="w11" class="wire" data-step="5" d="M595 166 C583 166, 583 290, 595 290"/>
+            <path id="w12" class="wire" data-step="5 6" d="M745 290 C788 290, 776 172, 800 172"/>
+            <path id="w13" class="wire" data-step="6" d="M882 204 L882 252"/>
+
+            <!-- moving data -->
+            <g id="dots">
+              <circle class="dot" r="4" data-step="1"><animateMotion dur="2.4s" begin="0s" repeatCount="indefinite"><mpath href="#w1"/></animateMotion></circle>
+              <circle class="dot" r="4" data-step="1"><animateMotion dur="2.4s" begin="-1.2s" repeatCount="indefinite"><mpath href="#w2"/></animateMotion></circle>
+              <circle class="dot" r="3.5" data-step="2"><animateMotion dur="1.2s" begin="0s" repeatCount="indefinite"><mpath href="#w3"/></animateMotion></circle>
+              <circle class="dot" r="3.5" data-step="4"><animateMotion dur="1.2s" begin="-0.6s" repeatCount="indefinite"><mpath href="#w4"/></animateMotion></circle>
+              <circle class="dot" r="4" data-step="4 5"><animateMotion dur="2.2s" begin="0s" repeatCount="indefinite"><mpath href="#w5"/></animateMotion></circle>
+              <circle class="dot" r="4" data-step="3"><animateMotion dur="3s" begin="0s" repeatCount="indefinite"><mpath href="#w6"/></animateMotion></circle>
+              <circle class="dot" r="3.5" data-step="3"><animateMotion dur="1.2s" begin="0s" repeatCount="indefinite"><mpath href="#w7"/></animateMotion></circle>
+              <circle class="dot" r="3.5" data-step="3"><animateMotion dur="1.2s" begin="-0.6s" repeatCount="indefinite"><mpath href="#w8"/></animateMotion></circle>
+              <circle class="dot" r="4" data-step="3"><animateMotion dur="2.6s" begin="-1s" repeatCount="indefinite"><mpath href="#w9"/></animateMotion></circle>
+              <circle class="dot" r="4" data-step="4"><animateMotion dur="2.4s" begin="-0.8s" repeatCount="indefinite"><mpath href="#w10"/></animateMotion></circle>
+              <circle class="dot" r="4" data-step="5"><animateMotion dur="2.2s" begin="-1.1s" repeatCount="indefinite"><mpath href="#w11"/></animateMotion></circle>
+              <circle class="dot" r="4" data-step="5 6"><animateMotion dur="2.2s" begin="-0.4s" repeatCount="indefinite"><mpath href="#w12"/></animateMotion></circle>
+              <circle class="dot" r="3.5" data-step="6"><animateMotion dur="1.6s" begin="0s" repeatCount="indefinite"><mpath href="#w13"/></animateMotion></circle>
+              <circle class="dot" r="3.5" data-step="6"><animateMotion dur="1.6s" begin="-0.8s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#w13"/></animateMotion></circle>
+            </g>
+
+            <!-- boxes -->
+            <g class="nd" data-step="1 3"><rect x="25" y="140" width="140" height="64" rx="10"/><text x="95" y="170" text-anchor="middle">SEC EDGAR</text><text class="s" x="95" y="187" text-anchor="middle">company filings</text></g>
+            <g class="nd" data-step="1"><rect x="25" y="236" width="140" height="64" rx="10"/><text x="95" y="266" text-anchor="middle">FRED</text><text class="s" x="95" y="283" text-anchor="middle">economy numbers</text></g>
+            <g class="nd" data-step="1 2"><rect x="225" y="175" width="95" height="80" rx="10"/><text x="272.5" y="211" text-anchor="middle">Collect</text><text class="s" x="272.5" y="228" text-anchor="middle">download</text></g>
+            <g class="nd" data-step="2 4"><rect x="335" y="175" width="95" height="80" rx="10"/><text x="382.5" y="211" text-anchor="middle">Clean</text><text class="s" x="382.5" y="228" text-anchor="middle">fix + date</text></g>
+            <g class="nd" data-step="4"><rect x="445" y="175" width="95" height="80" rx="10"/><text x="492.5" y="211" text-anchor="middle">Score</text><text class="s" x="492.5" y="228" text-anchor="middle">risk + why</text></g>
+            <g class="nd" data-step="4 5"><rect x="595" y="140" width="150" height="52" rx="10"/><text x="670" y="163" text-anchor="middle">Database</text><text class="s" x="670" y="180" text-anchor="middle">numbers and scores</text></g>
+            <g class="nd" data-step="3 5"><rect x="595" y="202" width="150" height="52" rx="10"/><text x="670" y="225" text-anchor="middle">File storage</text><text class="s" x="670" y="242" text-anchor="middle">raw files, the model</text></g>
+            <g class="nd" data-step="5 6"><rect x="595" y="264" width="150" height="52" rx="10"/><text x="670" y="287" text-anchor="middle">Security guard</text><text class="s" x="670" y="304" text-anchor="middle">who can see what</text></g>
+            <g class="nd" data-step="6"><rect x="800" y="140" width="165" height="64" rx="10"/><text x="882.5" y="170" text-anchor="middle">Website</text><text class="s" x="882.5" y="187" text-anchor="middle">Next.js on Vercel</text></g>
+            <g class="nd" data-step="6"><rect x="800" y="252" width="165" height="64" rx="10"/><text x="882.5" y="282" text-anchor="middle">You</text><text class="s" x="882.5" y="299" text-anchor="middle">any browser, no sign-up</text></g>
+            <g class="nd" data-step="3"><rect x="330" y="24" width="120" height="52" rx="10"/><text x="390" y="47" text-anchor="middle">SEC bulk files</text><text class="s" x="390" y="64" text-anchor="middle">11,000 companies</text></g>
+            <g class="nd" data-step="3"><rect x="470" y="24" width="130" height="52" rx="10"/><text x="535" y="47" text-anchor="middle">Learn</text><text class="s" x="535" y="64" text-anchor="middle">from 1,400 bankruptcies</text></g>
+            <g class="nd" data-step="3 4"><rect x="620" y="24" width="120" height="52" rx="10"/><text x="680" y="47" text-anchor="middle">Model</text><text class="s" x="680" y="64" text-anchor="middle">LightGBM</text></g>
+          </svg>
+        </div>
+        <div class="steps" role="tablist" aria-label="Steps">
+          <button data-go="1"><b>1</b>Collect</button>
+          <button data-go="2"><b>2</b>Clean</button>
+          <button data-go="3"><b>3</b>Learn</button>
+          <button data-go="4"><b>4</b>Score</button>
+          <button data-go="5"><b>5</b>Store safely</button>
+          <button data-go="6"><b>6</b>Show</button>
+          <button class="play" id="sys-play" aria-pressed="true">Pause</button>
+        </div>
+        <div class="caption" id="sys-caption" aria-live="polite"><h3>How it fits together</h3><p>Data moves left to right. Training happens once, at the top.</p></div>
+      </div>
+      <p class="sys-note">Everything uses public data only. Swipe sideways to see the whole diagram on a phone.</p>
+    </div>
+  </section>
+
+  <section id="financials">
     <div class="wrap reveal">
       <p class="kicker">Point-in-time financials</p>
       <h2>Every number, as it was known on the day</h2>
@@ -350,7 +480,7 @@
     </div>
   </section>
 
-  <section id="matching">
+  <section id="matching" class="alt">
     <div class="wrap reveal">
       <p class="kicker">Borrower matching</p>
       <h2>A cascade that knows when to ask a human</h2>
@@ -366,7 +496,7 @@
     </div>
   </section>
 
-  <section id="results" class="alt">
+  <section id="results">
     <div class="wrap reveal">
       <p class="kicker">Results so far</p>
       <h2>Measured, not promised</h2>
@@ -438,6 +568,33 @@
     </div>
   </section>
 
+  <section id="console" class="alt">
+    <div class="wrap reveal">
+      <p class="kicker">Analyst console <span class="pill" style="margin-left:6px">built · going live soon</span></p>
+      <h2>A watchlist you can rewind in time</h2>
+      <p class="sub">The app a credit analyst would use. It is built and tested, and it is being put online now. Below are real screens from it.</p>
+      <div class="shots">
+        <figure class="shot">
+          <img src="img/console-watchlist.jpg" width="1200" height="953" loading="lazy" alt="The watchlist on June 30, 2024: 50 companies ranked by risk, with Spirit Airlines highlighted in the high-risk group">
+          <figcaption><b>Watchlist.</b> 50 real companies ranked by risk. Slide back to any past quarter and see only what was public on that day.</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="img/console-company.jpg" width="1200" height="891" loading="lazy" alt="Spirit Airlines on June 30, 2024: 4.4% risk, high tier, with score history and the top reasons">
+          <figcaption><b>Company page.</b> Spirit Airlines on June 30, 2024: already high risk, 4.6 months before it filed for bankruptcy, with the reasons why.</figcaption>
+        </figure>
+      </div>
+      <div class="grid stagger" style="margin-top:28px">
+        <div class="card"><h3>Go back in time</h3><p>Pick any quarter since 2011. Every score uses only the filings that existed on that day, so you see what an analyst could really have known.</p></div>
+        <div class="card"><h3>See the reasons</h3><p>Each score shows its top 5 reasons in plain words, like "cash fell" or "debt rose", next to a chart of the score over time.</p></div>
+        <div class="card"><h3>Check every number</h3><p>Key numbers link to the exact SEC filing they came from. Numbers that were worked out or later corrected are marked.</p></div>
+        <div class="card"><h3>Open, but read-only</h3><p>Anyone can try the demo without signing up. Visitors can look but never change anything or see another lender's data, and 19 tests check that.</p></div>
+        <div class="card"><h3>Stays up to date</h3><p>Every Monday a robot downloads the latest filings for the 50 companies and scores them again.</p></div>
+        <div class="card"><h3>Honest demo list</h3><p>25 large companies that went bankrupt since 2022, picked by size, not by score, so the misses show too. Plus 25 healthy ones.</p></div>
+      </div>
+      <a class="ev" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform/pull/11">See the code for this step <span>→</span></a>
+    </div>
+  </section>
+
   <section id="trust">
     <div class="wrap reveal">
       <p class="kicker">Engineering</p>
@@ -448,7 +605,7 @@
         <div class="card"><h3>Tenant isolation</h3><p>Postgres row-level security on every customer table, with tests proving one lender can never read another's data.</p></div>
         <div class="card"><h3>History is append-only</h3><p>Metrics, predictions, feedback and audit logs reject updates, deletes and truncation at the database level.</p></div>
         <div class="card"><h3>Safe to re-run</h3><p>Every job is idempotent; a full rebuild followed by a second run adds zero rows.</p></div>
-        <div class="card"><h3><span data-count="249">249</span> tests in CI</h3><p>Lint, strict type checks and tests on every pull request, plus migrations applied to a real Supabase database.</p><a class="ev" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions">CI runs <span>→</span></a></div>
+        <div class="card"><h3><span data-count="281">281</span> tests in CI</h3><p>Lint, strict type checks and tests on every pull request, a full build of the web app, plus migrations applied to a real Supabase database.</p><a class="ev" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions">CI runs <span>→</span></a></div>
         <div class="card"><h3>Config, not code</h3><p>Tag mappings, event codes, sector exclusions and model names live in versioned config.</p></div>
       </div>
     </div>
@@ -457,7 +614,7 @@
   <section id="roadmap" class="alt">
     <div class="wrap reveal">
       <p class="kicker">Roadmap</p>
-      <h2>Five of eight phases shipped</h2>
+      <h2>Five phases shipped, the console is next to go live</h2>
       <p class="sub">Each phase ships with acceptance tests before the next one starts.</p>
       <div class="progress" aria-label="5 of 8 phases complete"><i></i></div>
       <table>
@@ -468,8 +625,9 @@
           <tr><td>2 · Canonical model</td><td class="hide-sm">Point-in-time financials, quarters, restatements</td><td><span class="status done">Done</span></td></tr>
           <tr><td>3 · Entity resolution</td><td class="hide-sm">Upload, matching cascade, review queue</td><td><span class="status done">Done</span></td></tr>
           <tr><td>4 · Models</td><td class="hide-sm">Features, labels, Altman / logistic / LightGBM, SHAP, model card</td><td><span class="status done">Done</span></td></tr>
-          <tr><td>5 · LLM signals</td><td class="hide-sm">Risk signals from filing text, Q&amp;A with citations</td><td><span class="status wip">Next</span></td></tr>
-          <tr><td>6 · App</td><td class="hide-sm">API and analyst console (live demo)</td><td><span class="status planned">Planned</span></td></tr>
+          <tr><td>6a · Console + demo</td><td class="hide-sm">Watchlist with rewind, company pages, model card, read-only public demo, weekly refresh</td><td><span class="status wip">Built · going live</span></td></tr>
+          <tr><td>5 · LLM signals</td><td class="hide-sm">Risk signals from filing text, Q&amp;A with citations</td><td><span class="status planned">Next</span></td></tr>
+          <tr><td>6b · Full app</td><td class="hide-sm">API, borrower upload and review, alerts and feedback</td><td><span class="status planned">Planned</span></td></tr>
           <tr><td>7 · Hosting</td><td class="hide-sm">Supabase, scheduled jobs, drift monitoring, alerts</td><td><span class="status planned">Planned</span></td></tr>
         </tbody>
       </table>
@@ -522,6 +680,53 @@
       }
       requestAnimationFrame(tick);
     });
+  }
+
+  // System diagram: walk through the six steps, highlighting the boxes and wires of each.
+  var STEPS = {
+    1: ["Collect", "Every Monday a robot (GitHub Actions) downloads the newest company filings from the SEC and economy numbers from FRED. Only public data is used."],
+    2: ["Clean", "Companies report the same number in many different ways. Covenant turns them into 25 standard numbers, like revenue and cash, and remembers the exact day each one became public."],
+    3: ["Learn", "Once, on a laptop, the model studied 11,000 companies since 2011, including 1,400 real bankruptcies, to learn which patterns come before trouble. The finished model is saved to cloud storage."],
+    4: ["Score", "For every company, the model gives the chance of bankruptcy in the next 12 months, plus its top 5 reasons in plain words, like “cash fell” or “debt rose”."],
+    5: ["Store safely", "Scores and numbers are saved in Supabase. A built-in security guard checks every request: each lender sees only its own companies, and demo visitors can look but never change anything."],
+    6: ["Show", "The website shows a ranked watchlist. Slide back to any past quarter to see exactly what Covenant knew on that day, then click a company to see why."]
+  };
+  var sys = document.getElementById("sys");
+  if (sys) {
+    var svg = sys.querySelector("svg");
+    var parts = Array.prototype.slice.call(sys.querySelectorAll("svg [data-step]"));
+    var buttons = Array.prototype.slice.call(sys.querySelectorAll("[data-go]"));
+    var caption = document.getElementById("sys-caption");
+    var playBtn = document.getElementById("sys-play");
+    var step = 0, timer = null, playing = !reduce, visible = false;
+
+    function show(n) {
+      step = n;
+      sys.classList.add("focus");
+      parts.forEach(function (el) { el.classList.toggle("on", el.getAttribute("data-step").split(" ").indexOf(String(n)) >= 0); });
+      buttons.forEach(function (b) { var on = b.getAttribute("data-go") === String(n); b.classList.toggle("on", on); b.setAttribute("aria-selected", on); });
+      caption.innerHTML = "<h3>" + n + ". " + STEPS[n][0] + "</h3><p>" + STEPS[n][1] + "</p>";
+      caption.classList.remove("swap"); void caption.offsetWidth; caption.classList.add("swap");
+    }
+    function tick() { show(step % 6 + 1); }
+    function run() {
+      clearInterval(timer); timer = null;
+      if (playing && visible) { if (!step) tick(); timer = setInterval(tick, 4200); }
+      playBtn.textContent = playing ? "Pause" : "Play";
+      playBtn.setAttribute("aria-pressed", playing);
+    }
+    buttons.forEach(function (b) {
+      b.addEventListener("click", function () { playing = false; show(Number(b.getAttribute("data-go"))); run(); });
+    });
+    playBtn.addEventListener("click", function () { playing = !playing; if (playing) tick(); run(); });
+    if (reduce) {
+      if (svg.pauseAnimations) svg.pauseAnimations();
+      document.getElementById("dots").style.display = "none";
+      show(1);
+    }
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (entries) { visible = entries[0].isIntersecting; run(); }, { threshold: 0.35 }).observe(sys);
+    } else { visible = true; run(); }
   }
 
   // Draw the hero chart.
