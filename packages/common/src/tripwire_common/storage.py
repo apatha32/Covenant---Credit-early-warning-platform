@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+import time
 from pathlib import Path, PurePosixPath
 from typing import Protocol
 
@@ -109,17 +110,28 @@ class SupabaseStorage:
             transport=transport,
         )
 
+    def _request(self, method: str, url: str, **kwargs: object) -> httpx.Response:
+        """One request, retried with backoff on network errors (dropped TLS connections)."""
+        for attempt in range(4):
+            try:
+                return self.client.request(method, url, **kwargs)  # type: ignore[arg-type]
+            except httpx.TransportError:
+                if attempt == 3:
+                    raise
+                time.sleep(2**attempt)
+        raise AssertionError("unreachable")
+
     def _object(self, key: str) -> str:
         return f"/object/{self.bucket}/{_check_key(key)}"
 
     def ensure_bucket(self) -> None:
-        r = self.client.post("/bucket", json={"id": self.bucket, "name": self.bucket,
+        r = self._request("POST", "/bucket", json={"id": self.bucket, "name": self.bucket,
                                                "public": False})  # fmt: skip
         if r.status_code not in (200, 201) and "already exists" not in r.text.lower():
             raise StorageError(f"cannot create bucket {self.bucket}: {r.status_code} {r.text}")
 
     def _upload(self, key: str, content: bytes) -> None:
-        r = self.client.post(self._object(key), content=content,
+        r = self._request("POST", self._object(key), content=content,
                              headers={"Content-Type": "application/octet-stream",
                                       "x-upsert": "false"})  # fmt: skip
         if r.status_code in (200, 201):
@@ -138,14 +150,14 @@ class SupabaseStorage:
         source.unlink()
 
     def read_bytes(self, key: str) -> bytes:
-        r = self.client.get(self._object(key))
+        r = self._request("GET", self._object(key))
         if r.status_code in (400, 404):
             raise StorageError(f"no such object: {key}")
         r.raise_for_status()
         return r.content
 
     def exists(self, key: str) -> bool:
-        r = self.client.head(self._object(key))
+        r = self._request("HEAD", self._object(key))
         return r.status_code == 200
 
     def local_path(self, key: str) -> Path:
