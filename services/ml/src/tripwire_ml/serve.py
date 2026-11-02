@@ -28,7 +28,7 @@ import polars as pl
 import psycopg
 from psycopg.types.json import Jsonb
 
-from tripwire_common.config import MLConfig, load_demo_portfolio, load_models_config
+from tripwire_common.config import DomainPack, MLConfig, load_demo_portfolio, load_models_config
 from tripwire_common.runs import ingest_run
 from tripwire_common.storage import LocalStorage, Storage, SupabaseStorage
 from tripwire_ml.explain import drivers
@@ -124,16 +124,22 @@ def _year_ago_index(frame: pl.DataFrame) -> dict[tuple[str, dt.date], dict[str, 
     return out
 
 
-def insert_predictions(conn: psycopg.Connection, rows: list[dict[str, Any]], version: int) -> int:
-    with conn.cursor() as cur:
-        cur.executemany(
-            """insert into ml.prediction (cik, as_of_date, model_version_id, probability,
-                                          risk_tier, top_drivers)
-               values (%s, %s, %s, %s, %s, %s) on conflict do nothing""",
-            [(r["cik"], r["as_of_date"], version, r["probability"], r["risk_tier"],
-              Jsonb(r["top_drivers"])) for r in rows],
-        )  # fmt: skip
-        return max(cur.rowcount, 0)
+def insert_predictions(conn: psycopg.Connection, rows: list[dict[str, Any]], version: int,
+                       batch: int = 250) -> int:  # fmt: skip
+    """Idempotent insert, in small batches: one huge write over a pooled TLS connection is
+    the likeliest thing to be cut off, and a re-run then resumes where it stopped."""
+    inserted = 0
+    for i in range(0, len(rows), batch):
+        with conn.cursor() as cur:
+            cur.executemany(
+                """insert into ml.prediction (cik, as_of_date, model_version_id, probability,
+                                              risk_tier, top_drivers)
+                   values (%s, %s, %s, %s, %s, %s) on conflict do nothing""",
+                [(r["cik"], r["as_of_date"], version, r["probability"], r["risk_tier"],
+                  Jsonb(r["top_drivers"])) for r in rows[i : i + batch]],
+            )  # fmt: skip
+            inserted += max(cur.rowcount, 0)
+    return inserted
 
 
 # --- demo-export ---
@@ -204,9 +210,16 @@ def refresh_data(ciks: list[str]) -> None:
         pipeline([step, "--cik", *ints])
 
 
-def _ensure_bucket(storage: Storage) -> None:
+def prepare_demo(storage: Storage, pack: DomainPack, skip_refresh: bool) -> dt.datetime:
+    """Create the Storage bucket and refresh the demo companies' data. Runs before the command
+    opens its own database connection: the refresh takes minutes, and a pooled connection
+    left idle that long can be closed under it."""
+    started = dt.datetime.now(dt.UTC)
     if isinstance(storage, SupabaseStorage):
         storage.ensure_bucket()
+    if not skip_refresh:
+        refresh_data(load_demo_portfolio(pack).ciks())
+    return started
 
 
 def _failed_child_runs(conn: psycopg.Connection, since: dt.datetime) -> list[str]:
@@ -221,14 +234,11 @@ def _failed_child_runs(conn: psycopg.Connection, since: dt.datetime) -> list[str
 # --- demo-seed ---
 
 
-def cmd_demo_seed(ctx: Context, skip_refresh: bool = False) -> None:
+def cmd_demo_seed(ctx: Context) -> None:
     demo = load_demo_portfolio(ctx.pack)
     bundle = bundle_dir(ctx)
     model_row = json.loads((bundle / "model_version.json").read_text())
     version, prefix = int(model_row["id"]), str(model_row["artifact_path"])
-    _ensure_bucket(ctx.storage)
-    if not skip_refresh:
-        refresh_data(demo.ciks())
     with ingest_run(ctx.conn, "ml_demo_seed") as run:
         source = LocalStorage(bundle)
         for name in ("model.txt", "calibrator.joblib", "meta.json", "tier_cutoffs.json"):
@@ -346,15 +356,11 @@ def _not_in_bankruptcy(ctx: Context, frame: pl.DataFrame) -> pl.DataFrame:
     return frame.join(keep, on=["cik", "as_of_date"], how="semi")
 
 
-def cmd_demo_refresh(
-    ctx: Context, as_of: dt.date | None = None, skip_refresh: bool = False
-) -> None:
+def cmd_demo_refresh(ctx: Context, started: dt.datetime, as_of: dt.date | None = None) -> None:
+    """Score as of `as_of` (default today). `started`: when prepare_demo began, so failed
+    refresh steps since then fail this command too."""
     demo = load_demo_portfolio(ctx.pack)
     as_of = as_of or dt.date.today()
-    started = dt.datetime.now(dt.UTC)
-    _ensure_bucket(ctx.storage)
-    if not skip_refresh:
-        refresh_data(demo.ciks())
     with ingest_run(ctx.conn, "ml_demo_refresh") as run:
         row = ctx.conn.execute(
             "select id, artifact_path from ml.model_version where is_active"

@@ -67,3 +67,21 @@ def test_append_only(api: FakeStorageApi, tmp_path: Path) -> None:
         s.read_bytes("missing")
     with pytest.raises(StorageError, match="invalid storage key"):
         s.write_bytes("../escape", b"x")
+
+
+def test_dropped_connections_are_retried(
+    api: FakeStorageApi, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("tripwire_common.storage.time.sleep", lambda _: None)
+    drops = iter([True, True, False])
+
+    def flaky(request: httpx.Request) -> httpx.Response:
+        if next(drops, False):
+            raise httpx.ReadError("ssl/tls alert bad record mac", request=request)
+        return api(request)
+
+    s = SupabaseStorage(
+        "http://x", "service-key", "b", tmp_path, transport=httpx.MockTransport(flaky)
+    )
+    s.write_bytes("k", b"v")
+    assert api.objects == {"k": b"v"}

@@ -193,9 +193,14 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(argv)
     settings = get_settings()
     configure_logging("ml")
+    pack, storage = load_domain_pack(), get_storage(settings)
+    started = dt.datetime.now(dt.UTC)
+    if args.command in ("demo-seed", "demo-refresh"):
+        from tripwire_ml.serve import prepare_demo
+
+        started = prepare_demo(storage, pack, args.skip_refresh)
     with connect(autocommit=True) as conn:
-        ctx = Context(conn, settings, load_sources_config(), load_domain_pack(),
-                      get_storage(settings))  # fmt: skip
+        ctx = Context(conn, settings, load_sources_config(), pack, storage)
         if args.command == "labels":
             cmd_labels(ctx)
         elif args.command == "dataset":
@@ -211,8 +216,8 @@ def main(argv: list[str] | None = None) -> None:
         elif args.command == "demo-seed":
             from tripwire_ml.serve import cmd_demo_seed
 
-            cmd_demo_seed(ctx, args.skip_refresh)
+            cmd_demo_seed(ctx)
         elif args.command == "demo-refresh":
             from tripwire_ml.serve import cmd_demo_refresh
 
-            cmd_demo_refresh(ctx, args.as_of, args.skip_refresh)
+            cmd_demo_refresh(ctx, started, args.as_of)
