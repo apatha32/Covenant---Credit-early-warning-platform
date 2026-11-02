@@ -7,7 +7,7 @@
 **Credit early-warning platform for lenders: messy SEC filings in, explainable 12-month distress alerts out.**
 
 [![Project site](https://img.shields.io/badge/Project_site-visit-b45309?style=for-the-badge)](https://apatha32.github.io/Covenant---Credit-early-warning-platform/)
-[![Live demo: in progress](https://img.shields.io/badge/Live_demo-in_progress-f59e0b?style=for-the-badge)](#roadmap)
+[![Try the live demo](https://img.shields.io/badge/Live_demo-try_it-15803d?style=for-the-badge)](https://covenant-credit-early-warning-platf.vercel.app)
 [![View the repo on GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github)](https://github.com/apatha32/Covenant---Credit-early-warning-platform)
 [![CI](https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions/workflows/ci.yml)
 
@@ -24,8 +24,23 @@ and maybe tickers. Covenant:
    was known on any past date, with the exact filing and tag it came from.
 3. **Scores 12-month distress risk** with a calibrated LightGBM model and explains, in plain
    English, why a borrower is flagged.
-4. **Gives analysts a console** for the watchlist, drill-downs with evidence, "ask the filings"
-   Q&A with citations, and alert dispositions (Phase 5–6).
+4. **Gives analysts a console**: a watchlist you can rewind to any past quarter and drill-downs
+   with evidence ([live](https://covenant-credit-early-warning-platf.vercel.app)). "Ask the filings" Q&A with
+   citations and alert dispositions come in Phases 5 and 6b.
+
+## Live demo
+
+**[covenant-credit-early-warning-platf.vercel.app](https://covenant-credit-early-warning-platf.vercel.app)**: no sign-up, read-only. Visitors get an anonymous session
+that can read only the demo portfolio (50 real SEC filers, fictional lender).
+
+1. The watchlist opens **as of June 30, 2024**. Spirit Airlines is in the high-risk tier (4.4%).
+2. Spirit filed for Chapter 11 on **Nov 18, 2024**, 4.6 months later. The score used only data public on June 30.
+3. Click through to Spirit's top reasons: liabilities / assets rose from 0.84 to 0.89, cash / assets fell from 0.15 to 0.09.
+4. Drag the "as of" slider to any quarter since 2011; every score is point in time.
+5. The model card tab has the full evaluation.
+
+Hosted on Vercel (Next.js) and Supabase; a GitHub Actions job refreshes SEC data for the demo
+companies weekly and re-scores them. See [docs/deploy.md](docs/deploy.md).
 
 ## Results so far
 
@@ -36,7 +51,7 @@ and maybe tickers. Covenant:
 | Canonical financials | 25 metrics from 50+ XBRL tags with ordered fallback, year-to-date → quarterly derivation, restatement versions, scale-error quarantine; core metrics complete for 139/179 active companies | [coverage report](reports/metric_coverage.md) |
 | Entity resolution | **100% auto-match precision at 82% coverage** on a held-out 100-row messy file (typos, old names, missing/wrong tickers); **0 wrong matches** on hand-written subsidiary/namesake traps | [evaluation](reports/entity_resolution_eval.md) |
 | Distress model | **LightGBM PR-AUC 0.098 vs 0.019 for an Altman Z'' baseline** (5x; base rate 1.1%) on 2022+ test data across ~6,000 companies; 65% of bankruptcies ranked in the riskiest 10%; flagged a median **14 months** before filing (151 of 211); beats Altman in every backtest year 2015-2024 | [model card](reports/model_eval.md) |
-| Engineering | Leakage test (features recomputed with all later data deleted must not change, and a planted leak must be caught), Postgres row-level security for multi-tenancy, 249 automated tests in CI against a real Supabase database | [CI](https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions) |
+| Engineering | Leakage test (features recomputed with all later data deleted must not change, and a planted leak must be caught), Postgres row-level security for multi-tenancy, 282 automated tests in CI against a real Supabase database, plus a web build | [CI](https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions) |
 
 ## Architecture
 
@@ -77,8 +92,8 @@ flowchart LR
 | 3 | Entity resolution: upload, matching, review queue | ✅ Done |
 | 4 | Features, labels, Altman / logistic / LightGBM models, SHAP, model card | ✅ Done |
 | 5 | LLM risk signals from filing text, Q&A with citations | Next |
-| 6a | Analyst console + read-only public demo ([PR #11](https://github.com/apatha32/Covenant---Credit-early-warning-platform/pull/11)) | Built, going live |
-| 6b | API, borrower upload and review, alerts | Planned |
+| 6a | Analyst console + read-only public demo, weekly refresh ([live](https://covenant-credit-early-warning-platf.vercel.app)) | ✅ Done |
+| 6b | API, borrower upload and review, alerts | Next |
 | 7 | Hosting (Supabase + scheduled jobs + Vercel), drift monitoring, alerts | Planned |
 
 **Stack:** Python 3.12, Polars, PostgreSQL / Supabase (RLS, Storage, pgvector), rapidfuzz,
