@@ -169,7 +169,7 @@
   /* roadmap */
   .progress { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; margin: 0 0 24px; max-width: 520px; }
   .progress i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--ok), var(--accent)); transition: width 1.4s var(--ease); }
-  .reveal.in .progress i { width: 62.5%; }
+  .reveal.in .progress i { width: 66.7%; }
   .status { font-size: 13px; font-weight: 650; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
   .done { background: var(--ok-soft); color: var(--ok); }
   .wip { background: var(--accent-soft); color: var(--accent); }
@@ -245,7 +245,7 @@
     *, *::before, *::after { animation: none !important; transition: none !important; }
     .reveal, .stagger > * { opacity: 1; transform: none; }
     .chart .line { stroke-dashoffset: 0; } .chart .area { opacity: .1; } .chart .flag { opacity: 1; }
-    .conf .bar i { width: var(--w); } .progress i { width: 62.5%; }
+    .conf .bar i { width: var(--w); } .progress i { width: 66.7%; }
   }
   @media (max-width: 860px) {
     .hero, .example, .shots { grid-template-columns: 1fr; }
@@ -291,10 +291,10 @@
           <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           View on GitHub
         </a>
-        <span class="btn soon" aria-disabled="true" title="The analyst console is built and being put online">
+        <a class="btn" href="https://covenant-credit-early-warning-platf.vercel.app">
           <span class="pulse" aria-hidden="true"></span>
-          Live demo <span class="pill">in progress</span>
-        </span>
+          Try the live demo <span class="pill">no sign-up</span>
+        </a>
       </div>
     </div>
     <div class="chart-card reveal" aria-label="Illustration of a risk score rising before a default">
@@ -570,9 +570,9 @@
 
   <section id="console" class="alt">
     <div class="wrap reveal">
-      <p class="kicker">Analyst console <span class="pill" style="margin-left:6px">built · going live soon</span></p>
+      <p class="kicker">Analyst console <span class="pill" style="margin-left:6px">live</span></p>
       <h2>A watchlist you can rewind in time</h2>
-      <p class="sub">The app a credit analyst would use. It is built and tested, and it is being put online now. Below are real screens from it.</p>
+      <p class="sub">The app a credit analyst would use. It is live: <a href="https://covenant-credit-early-warning-platf.vercel.app">try the demo</a>, no sign-up needed. It opens on June 30, 2024, five months before Spirit Airlines went bankrupt.</p>
       <div class="shots">
         <figure class="shot">
           <img src="img/console-watchlist.jpg" width="1200" height="953" loading="lazy" alt="The watchlist on June 30, 2024: 50 companies ranked by risk, with Spirit Airlines highlighted in the high-risk group">
@@ -591,7 +591,7 @@
         <div class="card"><h3>Stays up to date</h3><p>Every Monday a robot downloads the latest filings for the 50 companies and scores them again.</p></div>
         <div class="card"><h3>Honest demo list</h3><p>25 large companies that went bankrupt since 2022, picked by size, not by score, so the misses show too. Plus 25 healthy ones.</p></div>
       </div>
-      <a class="ev" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform/pull/11">See the code for this step <span>→</span></a>
+      <a class="ev" href="https://covenant-credit-early-warning-platf.vercel.app">Open the live demo <span>→</span></a>
     </div>
   </section>
 
@@ -614,9 +614,9 @@
   <section id="roadmap" class="alt">
     <div class="wrap reveal">
       <p class="kicker">Roadmap</p>
-      <h2>Five phases shipped, the console is next to go live</h2>
+      <h2>Six phases shipped, and the demo is live</h2>
       <p class="sub">Each phase ships with acceptance tests before the next one starts.</p>
-      <div class="progress" aria-label="5 of 8 phases complete"><i></i></div>
+      <div class="progress" aria-label="6 of 9 phases complete"><i></i></div>
       <table>
         <thead><tr><th>Phase</th><th class="hide-sm">Scope</th><th>Status</th></tr></thead>
         <tbody>
@@ -625,8 +625,8 @@
           <tr><td>2 · Canonical model</td><td class="hide-sm">Point-in-time financials, quarters, restatements</td><td><span class="status done">Done</span></td></tr>
           <tr><td>3 · Entity resolution</td><td class="hide-sm">Upload, matching cascade, review queue</td><td><span class="status done">Done</span></td></tr>
           <tr><td>4 · Models</td><td class="hide-sm">Features, labels, Altman / logistic / LightGBM, SHAP, model card</td><td><span class="status done">Done</span></td></tr>
-          <tr><td>6a · Console + demo</td><td class="hide-sm">Watchlist with rewind, company pages, model card, read-only public demo, weekly refresh</td><td><span class="status wip">Built · going live</span></td></tr>
-          <tr><td>5 · LLM signals</td><td class="hide-sm">Risk signals from filing text, Q&amp;A with citations</td><td><span class="status planned">Next</span></td></tr>
+          <tr><td>6a · Console + demo</td><td class="hide-sm">Watchlist with rewind, company pages, model card, read-only <a href="https://covenant-credit-early-warning-platf.vercel.app">public demo</a>, weekly refresh</td><td><span class="status done">Done</span></td></tr>
+          <tr><td>5 · LLM signals</td><td class="hide-sm">Risk signals from filing text, Q&amp;A with citations</td><td><span class="status wip">Next</span></td></tr>
           <tr><td>6b · Full app</td><td class="hide-sm">API, borrower upload and review, alerts and feedback</td><td><span class="status planned">Planned</span></td></tr>
           <tr><td>7 · Hosting</td><td class="hide-sm">Supabase, scheduled jobs, drift monitoring, alerts</td><td><span class="status planned">Planned</span></td></tr>
         </tbody>
@@ -639,7 +639,8 @@
       <h2>Follow the build</h2>
       <p class="sub" style="margin-left:auto;margin-right:auto">The source, specs and every evaluation report are public.</p>
       <div class="buttons">
-        <a class="btn primary" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform">View on GitHub</a>
+        <a class="btn primary" href="https://covenant-credit-early-warning-platf.vercel.app">Try the live demo</a>
+        <a class="btn" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform">View on GitHub</a>
         <a class="btn" href="https://github.com/apatha32/Covenant---Credit-early-warning-platform/blob/main/SPEC.md">Read the spec</a>
       </div>
     </div>
