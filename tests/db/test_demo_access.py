@@ -9,6 +9,7 @@ from dataclasses import dataclass
 import psycopg
 import pytest
 from psycopg import sql
+from psycopg.types.json import Jsonb
 from rls_helpers import acting_as, denied
 
 pytestmark = pytest.mark.db
@@ -275,3 +276,61 @@ def test_anonymous_flag_alone_blocks_writes(db: psycopg.Connection, demo: DemoWo
         db.execute(insert, [demo.demo_tenant])
     with acting_as(db, demo.visitor, is_anonymous=False):  # same user, signed in for real
         db.execute(insert, [demo.demo_tenant])
+
+
+# --- Phase 5: filing search and "Ask the filings" quota ---
+
+
+def _chunks(db: psycopg.Connection) -> None:
+    rows = [
+        (DEMO_CIKS[0], "2024-05-01", "We obtained a covenant waiver from our lenders."),
+        (DEMO_CIKS[0], "2024-08-01", "Liquidity is tight and a covenant waiver was extended."),
+        (OTHER_CIK, "2024-05-01", "Another lender's borrower also got a covenant waiver."),
+    ]
+    for i, (cik, filed, text) in enumerate(rows):
+        db.execute(
+            """insert into curated.filing_chunk (cik, accession, form_type, filed_date, section,
+                 chunk_index, chunk_text) values (%s, %s, '10-Q', %s, 'mdna', 0, %s)""",
+            [cik, f"{cik}-24-00000{i}", filed, text],
+        )
+
+
+def test_search_is_point_in_time_and_portfolio_scoped(
+    db: psycopg.Connection, demo: DemoWorld
+) -> None:
+    _chunks(db)
+    search = "select accession, filed_date from api.search_filings(%s, 'covenant or waiver', %s)"
+    with _as_visitor(db, demo):
+        early = db.execute(search, [DEMO_CIKS[0], "2024-06-30"]).fetchall()
+        later = db.execute(search, [DEMO_CIKS[0], "2024-09-30"]).fetchall()
+        other = db.execute(search, [OTHER_CIK, "2024-09-30"]).fetchall()
+    assert [str(r[1]) for r in early] == ["2024-05-01"]  # the August filing was not public yet
+    assert len(later) == 2
+    assert other == []  # another tenant's company: invisible
+
+
+def test_qa_quota_and_own_answers_only(db: psycopg.Connection, demo: DemoWorld) -> None:
+    db.execute("update ml.qa_limits set per_user_per_day = 2, total_per_day = 2")
+    begin = "select api.qa_begin(%s, %s, '2024-06-30')"
+    with _as_visitor(db, demo):
+        first = db.execute(begin, [DEMO_CIKS[0], "Any covenant waivers?"]).fetchone()[0]  # type: ignore[index]
+        db.execute("select api.qa_finish(%s, %s, 'm')", [first["id"], Jsonb({"answer": "yes"})])
+        cached = db.execute(begin, [DEMO_CIKS[0], "  any COVENANT   waivers? "]).fetchone()[0]  # type: ignore[index]
+        second = db.execute(begin, [DEMO_CIKS[0], "Liquidity?"]).fetchone()[0]  # type: ignore[index]
+        third = db.execute(begin, [DEMO_CIKS[0], "Debt maturities?"]).fetchone()[0]  # type: ignore[index]
+        other = db.execute(begin, [OTHER_CIK, "Liquidity?"]).fetchone()[0]  # type: ignore[index]
+    assert cached == {"cached": True, "answer": {"answer": "yes"}}
+    assert "id" in second
+    assert third["error"] == "user_limit"
+    assert other["error"] == "unknown_company"
+    # someone else cannot fill in this visitor's pending answer, or read the table
+    with acting_as(db, demo.stranger, is_anonymous=True):
+        db.execute("select api.qa_finish(%s, %s, 'x')", [second["id"], Jsonb({"answer": "pwned"})])
+    row = db.execute("select answer from ml.qa_answer where id = %s", [second["id"]]).fetchone()
+    assert row == (None,)
+    with _as_visitor(db, demo), denied(db):
+        db.execute("select * from ml.qa_answer")
+    # the overall daily cap applies across visitors
+    with acting_as(db, demo.stranger, is_anonymous=True):
+        capped = db.execute(begin, [DEMO_CIKS[0], "Anything?"]).fetchone()[0]  # type: ignore[index]
+    assert capped["error"] == "daily_limit"

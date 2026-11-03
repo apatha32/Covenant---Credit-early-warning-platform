@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo } from "react";
 import { ArrowLeft, ExternalLink } from "lucide-react";
+import { AskFilings } from "@/components/ask-filings";
 import { EventTimeline } from "@/components/event-timeline";
 import { MetricTimeline } from "@/components/metric-timeline";
 import { TierBadge } from "@/components/risk";
 import { ScoreChart } from "@/components/score-chart";
+import { TextSignals } from "@/components/text-signals";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   STORY,
@@ -21,7 +23,7 @@ import {
   pct,
 } from "@/lib/format";
 import { useQuery } from "@/lib/supabase";
-import type { Company, FilingEvent, MetricPoint, ScorePoint } from "@/lib/types";
+import type { Company, FilingEvent, MetricPoint, ScorePoint, TextSignal } from "@/lib/types";
 
 export default function CompanyPage() {
   return (
@@ -59,6 +61,16 @@ function CompanyDetail() {
         .gte("period_end", "2014-01-01")
         .order("period_end")
         .limit(1000),
+    [cik],
+  );
+  const signals = useQuery<TextSignal[]>(
+    (sb) =>
+      sb
+        .from("text_signals")
+        .select("accession,filed_date,section,signal_type,evidence_quote,confidence,model")
+        .eq("cik", cik)
+        .order("filed_date", { ascending: false })
+        .limit(500),
     [cik],
   );
   const events = useQuery<FilingEvent[]>(
@@ -208,6 +220,47 @@ function CompanyDetail() {
                   {source.accession} <ExternalLink className="size-3" />
                 </a>
               </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Risk signals from filings</CardTitle>
+            <CardDescription>
+              Read by Claude (Haiku 5.5) from risk factors, MD&amp;A and the auditor&apos;s report. Each signal shows
+              the exact sentence it came from; signals whose quote isn&apos;t in the filing are thrown out.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {signals.data && c ? (
+              <TextSignals cik={c.cik} signals={signals.data} asOf={asOf} />
+            ) : (
+              <p className="py-6 text-center text-sm text-muted-foreground">{signals.error ?? "Loading…"}</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Ask the filings</CardTitle>
+            <CardDescription>
+              Answers with quotes from the filings, or an honest &ldquo;not in the filings&rdquo;.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {c && (
+              <AskFilings
+                cik={c.cik}
+                name={c.name}
+                asOf={asOf}
+                suggestions={[
+                  "What did management say about liquidity?",
+                  "Are there any debt covenant problems?",
+                  "When does major debt mature?",
+                ]}
+              />
             )}
           </CardContent>
         </Card>

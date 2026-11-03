@@ -25,8 +25,8 @@ and maybe tickers. Covenant:
 3. **Scores 12-month distress risk** with a calibrated LightGBM model and explains, in plain
    English, why a borrower is flagged.
 4. **Gives analysts a console**: a watchlist you can rewind to any past quarter and drill-downs
-   with evidence ([live](https://covenant-credit-early-warning-platf.vercel.app)). "Ask the filings" Q&A with
-   citations and alert dispositions come in Phases 5 and 6b.
+   with evidence ([live](https://covenant-credit-early-warning-platf.vercel.app)), text risk signals
+   with quoted evidence, and "Ask the filings" Q&A with citations. Alert dispositions come in 6b.
 
 ## Live demo
 
@@ -91,7 +91,7 @@ flowchart LR
 | 2 | Cleaning & canonical point-in-time financial model | ✅ Done |
 | 3 | Entity resolution: upload, matching, review queue | ✅ Done |
 | 4 | Features, labels, Altman / logistic / LightGBM models, SHAP, model card | ✅ Done |
-| 5 | LLM risk signals from filing text, Q&A with citations | Next |
+| 5 | LLM risk signals from filing text (Claude Haiku), "Ask the filings" Q&A with citations (Claude Sonnet) | ✅ Done |
 | 6a | Analyst console + read-only public demo, weekly refresh ([live](https://covenant-credit-early-warning-platf.vercel.app)) | ✅ Done |
 | 6b | API, borrower upload and review, alerts | Next |
 | 7 | Hosting (Supabase + scheduled jobs + Vercel), drift monitoring, alerts | Planned |
@@ -204,6 +204,37 @@ uv run python -m tripwire_ml train               # 3 models, backtest, registry,
 - **Models:** Altman Z'' rule, logistic regression, LightGBM; isotonic calibration on validation;
   time-based splits with non-overlapping label windows; rolling-origin backtest; TreeSHAP drivers
   in plain English; registry in `ml.model_version` with a promotion rule.
+
+## LLM signals and "Ask the filings" (Phase 5)
+
+```sh
+uv run python -m tripwire_llm sections            # 10-K / 10-Q -> sections; Q&A chunks into Postgres
+uv run python -m tripwire_llm eval                # evals/text_signals.jsonl on Haiku and Sonnet
+uv run python -m tripwire_llm estimate            # exact token count on a sample -> cost
+uv run python -m tripwire_llm signals --submit    # Batch API (half price), refuses over budget
+uv run python -m tripwire_llm signals --collect   # verify every quote, load curated.text_signal
+```
+
+- **Sections:** risk factors, MD&A and the auditor's report, found from headings at the start of a
+  line (cross-references and table-of-contents entries are skipped); sections that cannot be found
+  are quarantined, never guessed. Found in 97% (MD&A) / 92% (risk factors) / 87% (auditor) of the
+  demo portfolio's 1,352 filings since 2019.
+- **Signals:** liquidity concern, covenant breach or waiver, going-concern doubt, refinancing risk,
+  customer concentration (`config/domain/finance/text_signals.yaml`). Claude Haiku 5.5 returns
+  strict JSON; a signal is kept only if its evidence quote is found word for word in the section.
+  Results are cached by (accession, section, prompt version, model). Loaded so far: 1,473 signals
+  across all 50 demo companies (2,589 of 2,861 section parts; 17 quotes rejected for not matching
+  the filing). The remaining 272 parts were refused for low API credit and are re-run with
+  `signals --submit` / `--collect`.
+- **Eval:** 96 passages labelled against the definitions; Haiku 5.5 74% precision / 93% recall,
+  Sonnet 5.5 82% / 100% at 17x the cost of this eval. Haiku extracts everything (Sonnet over all
+  filings would cost ~$42 against a $5 budget). A sharper prompt (v2) was tried and not kept.
+  [Report](reports/text_signal_eval.md).
+- **Ask the filings:** a Next.js server route searches one company's filings with Postgres
+  full-text search, only those public on the as-of date, under the visitor's row-level security;
+  it refuses without calling the model when nothing relevant is found. Claude Sonnet 5.5 answers
+  from numbered excerpts with quotes; quotes not found in the cited excerpt are dropped. Limits per
+  visitor and per day live in `ml.qa_limits`. [Citation check](reports/qa_eval.md).
 
 Against a real Supabase stack instead of the shim: `supabase db start` (database only) or
 `supabase start` (full local stack), then `supabase db push` to deploy to a linked project.

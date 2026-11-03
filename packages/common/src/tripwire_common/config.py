@@ -23,6 +23,10 @@ class LLMConfig(_Strict):
     extraction_default: str
     extraction_overrides: dict[str, str] = Field(default_factory=dict)
     qa: str
+    # Models compared on the text-signal eval set (evals/text_signals.jsonl).
+    eval_models: list[str] = Field(default_factory=list)
+    # USD per million tokens (input, output), standard API prices; batch jobs pay half.
+    prices: dict[str, tuple[float, float]] = Field(default_factory=dict)
 
     def extraction_model(self, signal_type: str) -> str:
         return self.extraction_overrides.get(signal_type, self.extraction_default)
@@ -437,6 +441,30 @@ class DemoPortfolio(_Strict):
 
 def load_demo_portfolio(pack: DomainPack) -> DemoPortfolio:
     return DemoPortfolio.model_validate(_read_yaml(pack.directory / "demo_portfolio.yaml"))
+
+
+# --- <pack>/text_signals.yaml ---
+
+
+class SignalDef(_Strict):
+    label: str
+    definition: str
+
+
+class TextSignals(_Strict):
+    version: int
+    prompt_version: str
+    signals: dict[str, SignalDef]
+    sections: dict[str, list[str]]
+    signals_since: dt.date
+    chunks_since: dt.date
+    chunk_chars: int = Field(gt=500)
+    max_section_chars: int = Field(gt=10_000)
+    budget_usd: float = Field(gt=0)
+
+
+def load_text_signals(pack: DomainPack) -> TextSignals:
+    return TextSignals.model_validate(_read_yaml(pack.directory / "text_signals.yaml"))
 
 
 # --- config/entity_resolution.yaml ---

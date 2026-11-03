@@ -110,3 +110,17 @@ export const METRICS: { key: string; label: string; kind: "flow" | "instant" }[]
   { key: "long_term_debt", label: "Long-term debt", kind: "instant" },
   { key: "total_liabilities", label: "Total liabilities", kind: "instant" },
 ];
+
+export const SIGNALS: Record<string, string> = {
+  liquidity_concern: "Liquidity concern",
+  covenant_breach: "Covenant breach or waiver",
+  going_concern: "Going-concern doubt",
+  refinancing_risk: "Refinancing risk",
+  customer_concentration: "Customer concentration",
+};
+
+export const SECTIONS: Record<string, string> = {
+  risk_factors: "Risk factors",
+  mdna: "MD&A",
+  auditor_report: "Auditor's report",
+};

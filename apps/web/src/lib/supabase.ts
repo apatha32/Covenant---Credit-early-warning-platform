@@ -68,3 +68,11 @@ export function useQuery<T>(
   }, deps);
   return state;
 }
+
+/** The current session's access token (for server routes that act as this visitor). */
+export async function accessToken(): Promise<string> {
+  const sb = await signedIn();
+  const { data } = await sb.auth.getSession();
+  if (!data.session) throw new Error("no session");
+  return data.session.access_token;
+}

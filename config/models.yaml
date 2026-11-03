@@ -7,14 +7,21 @@ llm:
   # Per-signal-type upgrades, set only where the Phase 5 eval shows Haiku is meaningfully worse.
   # Example: going_concern: claude-sonnet-5-5
   extraction_overrides: {}
-  # "Ask the filings" RAG Q&A.
+  # "Ask the filings" RAG Q&A (apps/web/src/app/api/ask reads QA_MODEL; keep them in sync).
   qa: claude-sonnet-5-5
+  # Compared on evals/text_signals.jsonl (reports/text_signal_eval.md).
+  eval_models: [claude-haiku-5-5, claude-sonnet-5-5]
+  # USD per million tokens [input, output], standard API; the Batch API halves both.
+  prices:
+    claude-haiku-5-5: [0.10, 0.50]
+    claude-sonnet-5-5: [2.00, 10.00]
 
 embedding:
-  # Claude has no embeddings endpoint; provider is an open question (see README).
-  # `dimensions` must match the vector column in curated.filing_chunk.
-  provider: voyage
-  model: voyage-3.5
+  # Not used yet: "Ask the filings" retrieves with Postgres full-text search (decided in
+  # Phase 5). Kept so a vector index can be added; `dimensions` must match
+  # curated.filing_chunk.embedding.
+  provider: none
+  model: none
   dimensions: 1024
 
 ml:

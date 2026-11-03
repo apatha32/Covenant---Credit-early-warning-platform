@@ -2,10 +2,18 @@
 name = "tripwire-llm"
 version = "0.1.0"
 requires-python = ">=3.12,<3.13"
-dependencies = ["tripwire-common"]
+dependencies = [
+    "anthropic>=2.4.0",
+    "polars>=2.0.0",
+    "tripwire-common",
+    "tripwire-ingest",
+    "tripwire-ml",
+]
 
 [tool.uv.sources]
 tripwire-common = { workspace = true }
+tripwire-ml = { workspace = true }
+tripwire-ingest = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

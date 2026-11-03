@@ -1,0 +1,20 @@
+# Prompt v2 (tried 2026-11-02, not kept): only the three definitions that changed from v1.
+going_concern: >-
+  Management or the auditor states there is substantial doubt about the company's ability to
+  continue as a going concern, or that such doubt was alleviated by management's plans.
+  Boilerplate saying a going-concern opinion "could" be issued in the future counts only if
+  the filing says the conditions for it currently exist.
+  Saying that such doubt existed in an earlier period and has since been resolved (for example
+  after emerging from bankruptcy), or that statements are prepared on a going-concern basis
+  without any doubt, does NOT count.
+refinancing_risk: >-
+  Significant debt matures soon (roughly within the next 12-24 months) and the company itself
+  expresses doubt that it can refinance, extend or repay it (e.g. "no assurance we will be able
+  to refinance", repayment depends on a transaction not yet completed). NOT refinancing risk:
+  describing maturity dates, a plan or intention to refinance with no doubt expressed, a
+  refinancing or extension that has already been completed, or generic risk-factor language.
+customer_concentration: >-
+  A single customer, or a small group, accounts for a large share of revenue or receivables
+  (typically 10% or more), stated with a figure or named customer.
+  A statement that no customer reached that share is NOT concentration; shares of revenue by
+  segment, product or geography are NOT customer concentration.
