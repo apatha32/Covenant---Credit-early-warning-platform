@@ -222,10 +222,9 @@ uv run python -m tripwire_llm signals --collect   # verify every quote, load cur
 - **Signals:** liquidity concern, covenant breach or waiver, going-concern doubt, refinancing risk,
   customer concentration (`config/domain/finance/text_signals.yaml`). Claude Haiku 5.5 returns
   strict JSON; a signal is kept only if its evidence quote is found word for word in the section.
-  Results are cached by (accession, section, prompt version, model). Loaded so far: 1,473 signals
-  across all 50 demo companies (2,589 of 2,861 section parts; 17 quotes rejected for not matching
-  the filing). The remaining 272 parts were refused for low API credit and are re-run with
-  `signals --submit` / `--collect`.
+  Results are cached by (accession, section, prompt version, model). Loaded: 1,650 signals across
+  all 50 demo companies from 2,861 section parts; 22 quotes were rejected for not matching the
+  filing. Total Claude spend for Phase 5 (eval, extraction, Q&A tests): about $3.
 - **Eval:** 96 passages labelled against the definitions; Haiku 5.5 74% precision / 93% recall,
   Sonnet 5.5 82% / 100% at 17x the cost of this eval. Haiku extracts everything (Sonnet over all
   filings would cost ~$42 against a $5 budget). A sharper prompt (v2) was tried and not kept.
