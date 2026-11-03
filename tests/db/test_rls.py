@@ -188,7 +188,6 @@ def test_anon_has_no_access(db: psycopg.Connection, world: World, table: str) ->
         "staging.facts",
         "staging.filings",
         "curated.macro_series",
-        "curated.text_signal",
         "ml.feature_snapshot",
         "ml.label",
     ],

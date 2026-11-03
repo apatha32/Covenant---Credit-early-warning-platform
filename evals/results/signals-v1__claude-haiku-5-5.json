@@ -1,0 +1,549 @@
+{
+ "prompt_version": "signals-v1",
+ "model": "claude-haiku-5-5",
+ "date": "2026-11-02",
+ "input_tokens": 149909,
+ "output_tokens": 7236,
+ "rejected_quotes": 0,
+ "cost_usd": 0.0186089,
+ "predictions": [
+  {
+   "id": 1,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 2,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 3,
+   "predicted": [
+    "going_concern",
+    "covenant_breach",
+    "liquidity_concern"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 4,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 5,
+   "predicted": [
+    "going_concern",
+    "covenant_breach",
+    "liquidity_concern"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 6,
+   "predicted": [
+    "refinancing_risk"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 7,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 8,
+   "predicted": [
+    "going_concern",
+    "liquidity_concern"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 9,
+   "predicted": [
+    "going_concern"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 10,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 11,
+   "predicted": [
+    "liquidity_concern",
+    "going_concern"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 12,
+   "predicted": [
+    "liquidity_concern"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 13,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 14,
+   "predicted": [
+    "customer_concentration"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 15,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 16,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 17,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 18,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 19,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 20,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 21,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 22,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 23,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 24,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 25,
+   "predicted": [
+    "going_concern"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 26,
+   "predicted": [
+    "going_concern"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 27,
+   "predicted": [
+    "liquidity_concern"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 28,
+   "predicted": [
+    "covenant_breach"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 29,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 30,
+   "predicted": [
+    "going_concern",
+    "liquidity_concern"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 31,
+   "predicted": [
+    "going_concern"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 32,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 33,
+   "predicted": [
+    "going_concern",
+    "refinancing_risk"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 34,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 35,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 36,
+   "predicted": [
+    "refinancing_risk"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 37,
+   "predicted": [
+    "refinancing_risk"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 38,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 39,
+   "predicted": [
+    "refinancing_risk"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 40,
+   "predicted": [
+    "refinancing_risk"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 41,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 42,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 43,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 44,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 45,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 46,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 47,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 48,
+   "predicted": [
+    "customer_concentration"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 49,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 50,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 51,
+   "predicted": [
+    "customer_concentration"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 52,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 53,
+   "predicted": [
+    "customer_concentration"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 54,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 55,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 56,
+   "predicted": [
+    "customer_concentration"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 57,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 58,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 59,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 60,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 61,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 62,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 63,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 64,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 65,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 66,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 67,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 68,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 69,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 70,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 71,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 72,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 73,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 74,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 75,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 76,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 77,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 78,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 79,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 80,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 81,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 82,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 83,
+   "predicted": [
+    "going_concern",
+    "liquidity_concern",
+    "covenant_breach"
+   ],
+   "rejected": 0
+  },
+  {
+   "id": 84,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 85,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 86,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 87,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 88,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 89,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 90,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 91,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 92,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 93,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 94,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 95,
+   "predicted": [],
+   "rejected": 0
+  },
+  {
+   "id": 96,
+   "predicted": [],
+   "rejected": 0
+  }
+ ]
+}

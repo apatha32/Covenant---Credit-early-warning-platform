@@ -57,7 +57,10 @@ Parquet.
 3. **Environment Variables** (Production and Preview):
    - `NEXT_PUBLIC_SUPABASE_URL` = the `SUPABASE_URL` value
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = the anon / publishable key
-4. Deploy. Production deploys follow `main`; every PR gets a preview URL.
+4. For "Ask the filings" (Phase 5), also add `ANTHROPIC_API_KEY` (no `NEXT_PUBLIC_` prefix, so it
+   stays on the server; Production only). Optional: `QA_MODEL` (default `claude-sonnet-5-5`).
+   Without the key the panel says the feature is off; everything else works.
+5. Deploy. Production deploys follow `main`; every PR gets a preview URL.
 
 ### 4. GitHub Actions
 
@@ -73,6 +76,31 @@ Repo → **Settings → Secrets and variables → Actions**:
 
 Failure emails: GitHub notifies the user who last changed the schedule. Check **your profile →
 Settings → Notifications → Actions** is set to email on failed workflows.
+
+## "Ask the filings" limits and spend
+
+Each question costs about 2 cents (Claude Sonnet 5.5 with ~8 filing excerpts). Limits live in the
+database, so changing them needs no deploy:
+
+```sql
+update ml.qa_limits set per_user_per_day = 3, total_per_day = 30;   -- current defaults
+select count(*), min(created_at) from ml.qa_answer where created_at > now() - interval '1 day';
+```
+
+Also set a monthly spend limit on the API key's workspace in the Anthropic Console.
+
+## Text signals (Phase 5, run from a laptop)
+
+The weekly job does not extract text signals yet (it would need the section files in Storage).
+To add signals for new filings, from the repo root with `.env.cloud` loaded:
+
+```bash
+set -a && . ./.env.cloud && set +a
+uv run python -m tripwire_llm sections          # new filings -> sections + Q&A chunks
+uv run python -m tripwire_llm estimate          # cost check (exact token counts on a sample)
+uv run python -m tripwire_llm signals --submit  # Batch API; refuses above budget_usd
+uv run python -m tripwire_llm signals --collect # waits, verifies quotes, loads curated.text_signal
+```
 
 ## Running the weekly refresh by hand
 

@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 
 import psycopg
+from psycopg.conninfo import make_conninfo
 
 from tripwire_common.settings import REPO_ROOT, get_settings
 
@@ -15,9 +16,16 @@ LOCAL_SHIM = REPO_ROOT / "supabase" / "local" / "supabase_shim.sql"
 log = logging.getLogger(__name__)
 
 
+# TCP keepalives: a connection that dies silently (dropped by a pooler or a flaky link) raises
+# an error within about a minute instead of hanging forever, so callers can retry.
+KEEPALIVES = {"keepalives": 1, "keepalives_idle": 30, "keepalives_interval": 10,
+              "keepalives_count": 3, "connect_timeout": 15}  # fmt: skip
+
+
 def connect(url: str | None = None, *, autocommit: bool = False) -> psycopg.Connection:
     """Open a connection to DATABASE_URL (or `url`)."""
-    return psycopg.connect(url or get_settings().require("database_url"), autocommit=autocommit)
+    conninfo = make_conninfo(url or get_settings().require("database_url"), **KEEPALIVES)
+    return psycopg.connect(conninfo, autocommit=autocommit)
 
 
 def migration_files(directory: Path = MIGRATIONS_DIR) -> list[Path]:

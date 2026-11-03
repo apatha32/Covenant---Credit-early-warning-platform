@@ -23,7 +23,7 @@ def document_key(cik: str, accession: str, document: str) -> str:
 
 
 def fetch_document(
-    conn: psycopg.Connection,
+    conn: psycopg.Connection | None,
     storage: Storage,
     client: HttpClient,
     config: SecSourceConfig,
@@ -32,7 +32,9 @@ def fetch_document(
     document: str,
     run: RunLog,
 ) -> bytes | None:
-    """Raw document bytes, from storage if already fetched. None if EDGAR has no such file."""
+    """Raw document bytes, from storage if already fetched. None if EDGAR has no such file.
+    With conn=None the file is cached but not indexed in raw.source_files (used when the cache is
+    a local directory that the target database cannot reach)."""
     key = document_key(cik, accession, document)
     if storage.exists(key):
         run.counts["documents_cached"] += 1
@@ -46,12 +48,13 @@ def fetch_document(
         return None
     body = response.content
     storage.write_bytes(key, body)
-    conn.execute(
-        """insert into raw.source_files (source, source_key, storage_path, checksum, run_id)
-           values ('sec_document', %s, %s, %s, %s)
-           on conflict (source, source_key, checksum) do nothing""",
-        [f"{accession}/{document}", key, sha256(body), run.id],
-    )
+    if conn is not None:
+        conn.execute(
+            """insert into raw.source_files (source, source_key, storage_path, checksum, run_id)
+               values ('sec_document', %s, %s, %s, %s)
+               on conflict (source, source_key, checksum) do nothing""",
+            [f"{accession}/{document}", key, sha256(body), run.id],
+        )
     run.counts["documents_fetched"] += 1
     return body
 

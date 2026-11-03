@@ -1,0 +1,55 @@
+# Text signals extracted from filings by Claude (Phase 5). Bump prompt_version whenever the
+# definitions, instructions or schema change: cached results are keyed by it.
+version: 1
+prompt_version: signals-v1  # v2 was tried and not kept: see reports/text_signal_eval.md
+
+# What each signal means. The prompt is built from these definitions.
+signals:
+  liquidity_concern:
+    label: Liquidity concern
+    definition: >-
+      The company says its cash, cash flow or available credit may not be enough to fund
+      operations, debt payments or commitments over the coming months, or describes taking
+      emergency steps to preserve cash (e.g. drawing down revolvers to hold cash, suspending
+      dividends to preserve liquidity, seeking new financing to meet obligations).
+      Generic statements that the company "believes its cash is sufficient" are NOT a concern.
+  covenant_breach:
+    label: Covenant breach or waiver
+    definition: >-
+      The company reports that it breached, expects to breach, or may not comply with a debt
+      covenant, or that it obtained (or is seeking) a waiver, amendment or forbearance because of
+      covenant compliance. A plain description of covenant terms, or a statement that the company
+      is in compliance, is NOT a breach.
+  going_concern:
+    label: Going-concern doubt
+    definition: >-
+      Management or the auditor states there is substantial doubt about the company's ability to
+      continue as a going concern, or that such doubt was alleviated by management's plans.
+      Boilerplate saying a going-concern opinion "could" be issued in the future counts only if
+      the filing says the conditions for it currently exist.
+  refinancing_risk:
+    label: Refinancing risk
+    definition: >-
+      Significant debt matures soon (roughly within the next 12-24 months) and the company says it
+      may be unable to refinance, extend or repay it, or that refinancing depends on uncertain
+      events. Routine mention of a future maturity date is NOT refinancing risk.
+  customer_concentration:
+    label: Customer concentration
+    definition: >-
+      A single customer, or a small group, accounts for a large share of revenue or receivables
+      (typically 10% or more), stated with a figure or named customer.
+
+# Sections read for signals, per form (see tripwire_llm.sections).
+sections:
+  "10-K": [risk_factors, mdna, auditor_report]
+  "10-Q": [mdna, risk_factors]
+
+# Signal extraction scope (demo portfolio; spend capped by budget_usd).
+signals_since: "2019-01-01"
+# "Ask the filings" chunks kept in Postgres (storage budget): filings since this date.
+chunks_since: "2022-07-01"
+chunk_chars: 4000
+# A section longer than this is split into parts for extraction (Haiku 5.5 prices rise above
+# 100K input tokens per request).
+max_section_chars: 240000
+budget_usd: 5.0

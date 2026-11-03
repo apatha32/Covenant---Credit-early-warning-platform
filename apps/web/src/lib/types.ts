@@ -58,3 +58,24 @@ export type FilingEvent = {
   filed_date: string;
   raw_items: string | null;
 };
+
+export type TextSignal = {
+  accession: string;
+  filed_date: string;
+  section: string;
+  signal_type: string;
+  evidence_quote: string;
+  confidence: number;
+  model: string;
+};
+
+export type QaCitation = {
+  quote: string;
+  accession: string;
+  form_type: string | null;
+  filed_date: string;
+  section: string;
+  url: string;
+};
+
+export type QaAnswer = { answerable: boolean; answer: string; citations: QaCitation[]; cached?: boolean };
