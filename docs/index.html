@@ -169,7 +169,7 @@
   /* roadmap */
   .progress { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; margin: 0 0 24px; max-width: 520px; }
   .progress i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--ok), var(--accent)); transition: width 1.4s var(--ease); }
-  .reveal.in .progress i { width: 77.8%; }
+  .reveal.in .progress i { width: 88.9%; }
   .status { font-size: 13px; font-weight: 650; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
   .done { background: var(--ok-soft); color: var(--ok); }
   .wip { background: var(--accent-soft); color: var(--accent); }
@@ -245,7 +245,7 @@
     *, *::before, *::after { animation: none !important; transition: none !important; }
     .reveal, .stagger > * { opacity: 1; transform: none; }
     .chart .line { stroke-dashoffset: 0; } .chart .area { opacity: .1; } .chart .flag { opacity: 1; }
-    .conf .bar i { width: var(--w); } .progress i { width: 77.8%; }
+    .conf .bar i { width: var(--w); } .progress i { width: 88.9%; }
   }
   @media (max-width: 860px) {
     .hero, .example, .shots { grid-template-columns: 1fr; }
@@ -353,7 +353,7 @@
         <div class="card"><div class="step">04 · Act</div><h3>Review and respond</h3><p>A watchlist you can rewind to any past quarter, risk signals Claude read from the filings (each with its quote), and &ldquo;Ask the filings&rdquo; with citations. Agree/dismiss feedback comes later.</p></div>
       </div>
       <div class="stack">
-        <span>Python 3.12</span><span>Polars</span><span>PostgreSQL / Supabase</span><span>Row-level security</span><span>rapidfuzz</span><span>Pandera</span><span>LightGBM</span><span>Claude API</span><span>Next.js</span><span>GitHub Actions</span>
+        <span>Python 3.12</span><span>Polars</span><span>PostgreSQL / Supabase</span><span>Row-level security</span><span>rapidfuzz</span><span>Pandera</span><span>LightGBM</span><span>Claude API</span><span>Next.js</span><span>FastAPI</span><span>GitHub Actions</span>
       </div>
     </div>
   </section>
@@ -616,9 +616,9 @@
   <section id="roadmap" class="alt">
     <div class="wrap reveal">
       <p class="kicker">Roadmap</p>
-      <h2>Seven phases shipped, and the demo is live</h2>
+      <h2>Eight phases shipped, and the app is live</h2>
       <p class="sub">Each phase ships with acceptance tests before the next one starts.</p>
-      <div class="progress" aria-label="7 of 9 phases complete"><i></i></div>
+      <div class="progress" aria-label="8 of 9 phases complete"><i></i></div>
       <table>
         <thead><tr><th>Phase</th><th class="hide-sm">Scope</th><th>Status</th></tr></thead>
         <tbody>
@@ -629,8 +629,8 @@
           <tr><td>4 · Models</td><td class="hide-sm">Features, labels, Altman / logistic / LightGBM, SHAP, model card</td><td><span class="status done">Done</span></td></tr>
           <tr><td>6a · Console + demo</td><td class="hide-sm">Watchlist with rewind, company pages, model card, read-only <a href="https://covenant-credit-early-warning-platf.vercel.app">public demo</a>, weekly refresh</td><td><span class="status done">Done</span></td></tr>
           <tr><td>5 · AI signals</td><td class="hide-sm">Claude reads filings for risk signals with quotes; &ldquo;Ask the filings&rdquo; with citations</td><td><span class="status done">Done</span></td></tr>
-          <tr><td>6b · Full app</td><td class="hide-sm">API, borrower upload and review, alerts and feedback</td><td><span class="status wip">Next</span></td></tr>
-          <tr><td>7 · Hosting</td><td class="hide-sm">Supabase, scheduled jobs, drift monitoring, alerts</td><td><span class="status planned">Planned</span></td></tr>
+          <tr><td>6b · Full app</td><td class="hide-sm">Lender accounts, API, borrower upload and match review, alerts inbox, data health</td><td><span class="status done">Done</span></td></tr>
+          <tr><td>7 · Hardening</td><td class="hide-sm">Drift monitoring, recalibration, job failure alerts</td><td><span class="status wip">Next</span></td></tr>
         </tbody>
       </table>
     </div>

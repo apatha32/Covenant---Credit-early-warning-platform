@@ -7,6 +7,7 @@
     uv run python -m tripwire_ml demo-export # hosted demo bundle (see tripwire_ml.serve)
     uv run python -m tripwire_ml demo-seed   # load it into DATABASE_URL / TRIPWIRE_STORAGE
     uv run python -m tripwire_ml demo-refresh  # weekly: refresh SEC data, re-score as of today
+    uv run python -m tripwire_ml serve-new   # hourly: score companies newly added by lenders
 """
 
 from __future__ import annotations
@@ -181,12 +182,12 @@ def main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument(
         "command", choices=["labels", "dataset", "train", "demo-export", "demo-seed",
-                            "demo-refresh"],
+                            "demo-refresh", "serve-new"],
     )  # fmt: skip
     parser.add_argument(
         "--skip-refresh",
         action="store_true",
-        help="demo-seed / demo-refresh: do not re-fetch SEC and FRED data",
+        help="demo-seed / demo-refresh / serve-new: do not re-fetch SEC and FRED data",
     )
     parser.add_argument("--as-of", type=dt.date.fromisoformat,
                         help="demo-refresh: score as of this date (default: today)")  # fmt: skip
@@ -194,11 +195,14 @@ def main(argv: list[str] | None = None) -> None:
     settings = get_settings()
     configure_logging("ml")
     pack, storage = load_domain_pack(), get_storage(settings)
-    started = dt.datetime.now(dt.UTC)
-    if args.command in ("demo-seed", "demo-refresh"):
+    started, ciks = dt.datetime.now(dt.UTC), list[str]()
+    if args.command in ("demo-seed", "demo-refresh", "serve-new"):
         from tripwire_ml.serve import prepare_demo
 
-        started = prepare_demo(storage, pack, args.skip_refresh)
+        started, ciks = prepare_demo(storage, pack, args.command, args.skip_refresh)
+        if args.command == "serve-new" and not ciks:
+            log.info("no new companies to score")
+            return
     with connect(autocommit=True) as conn:
         ctx = Context(conn, settings, load_sources_config(), pack, storage)
         if args.command == "labels":
@@ -217,7 +221,8 @@ def main(argv: list[str] | None = None) -> None:
             from tripwire_ml.serve import cmd_demo_seed
 
             cmd_demo_seed(ctx)
-        elif args.command == "demo-refresh":
-            from tripwire_ml.serve import cmd_demo_refresh
+        elif args.command in ("demo-refresh", "serve-new"):
+            from tripwire_ml.serve import cmd_serve
 
-            cmd_demo_refresh(ctx, started, args.as_of)
+            job = "ml_demo_refresh" if args.command == "demo-refresh" else "ml_serve_new"
+            cmd_serve(ctx, started, ciks, job, args.as_of)

@@ -26,6 +26,7 @@ create table if not exists auth.users (
   email text unique,
   created_at timestamptz not null default now()
 );
+alter table auth.users add column if not exists is_anonymous boolean not null default false;
 
 create or replace function auth.jwt() returns jsonb
 language sql stable

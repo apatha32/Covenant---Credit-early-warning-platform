@@ -15,7 +15,7 @@ PIPELINE_SCHEMAS = ("raw", "staging", "curated", "ml")
 # Shared data the console reads; row policies limit it to the caller's portfolio companies.
 CONSOLE_READABLE = {"curated.company", "curated.financial_metric", "curated.filing_event",
                     "curated.bankruptcy_case", "curated.text_signal", "curated.filing_chunk",
-                    "ml.prediction", "ml.model_version"}  # fmt: skip
+                    "ml.prediction", "ml.model_version", "ml.served_company"}  # fmt: skip
 
 
 def test_all_schemas_exist(db: psycopg.Connection) -> None:
