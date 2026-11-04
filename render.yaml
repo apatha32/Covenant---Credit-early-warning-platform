@@ -1,0 +1,26 @@
+# Render Blueprint for the Covenant API (services/api). Render dashboard -> New -> Blueprint ->
+# pick this repo. Secrets are entered in the dashboard (sync: false), never committed.
+services:
+  - type: web
+    name: covenant-api
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./services/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - services/**
+        - packages/**
+        - config/**
+        - pyproject.toml
+        - uv.lock
+    envVars:
+      - key: DATABASE_URL # Supabase session pooler URL (same as the GitHub secret)
+        sync: false
+      - key: SUPABASE_URL # https://<project-ref>.supabase.co
+        sync: false
+      - key: API_CORS_ORIGINS # the web app origin(s), comma-separated
+        value: https://covenant-credit-early-warning-platf.vercel.app

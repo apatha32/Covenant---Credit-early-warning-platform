@@ -1,12 +1,13 @@
 # Deploying the live demo
 
-The demo has three hosted pieces:
+The console has four hosted pieces:
 
 | Piece | Where | Holds |
 |---|---|---|
-| Database, auth, storage | Supabase (free tier) | Migrations, demo tenant, 50 demo companies' curated data, predictions; model artifacts in the private `tripwire` bucket |
-| Web app (`apps/web`) | Vercel (Hobby) | Next.js console. Knows only the Supabase URL and anon key |
-| Weekly refresh | GitHub Actions (`refresh-demo.yml`) | Per-company SEC API + FRED refresh, re-score, new predictions |
+| Database, auth, storage | Supabase (free tier) | Migrations, the SEC company universe, demo + lender tenants, served companies' curated data, predictions, alerts; model artifacts in the private `tripwire` bucket |
+| Web app (`apps/web`) | Vercel (Hobby) | Next.js console. Knows only the Supabase URL, the anon key and the API URL |
+| API (`services/api`) | Render (free) | FastAPI: uploads, matching, review decisions, alert dispositions. Database URL + Supabase URL |
+| Scheduled jobs | GitHub Actions | `refresh-demo.yml` (weekly: refresh + re-score every served company), `score-new.yml` (hourly: newly added borrowers) |
 
 Visitors are signed in anonymously (Supabase anonymous sign-in). An anonymous session can read
 only the demo tenant (`app.tenant.is_demo`) through the `api` views and can write nothing:
@@ -62,6 +63,25 @@ Parquet.
    Without the key the panel says the feature is off; everything else works.
 5. Deploy. Production deploys follow `main`; every PR gets a preview URL.
 
+### 3b. Accounts and the API (Phase 6b)
+
+1. **Supabase → Authentication → URL Configuration**: Site URL = the Vercel URL (confirmation
+   emails link there). **Sign In / Providers → Email** stays on. "Confirm email" on means each new
+   account must click an email link; Supabase's built-in mailer sends only a few emails per hour,
+   so for a demo you can turn it off.
+2. **Render**: <https://dashboard.render.com> → New → **Blueprint** → this repo. It reads
+   `render.yaml` (Docker, free plan, health check `/health`). When asked, enter:
+   - `DATABASE_URL` = the session pooler URL (same as `.env.cloud`)
+   - `SUPABASE_URL` = `https://<project-ref>.supabase.co`
+   The API never needs the service-role key or the anon key: it verifies tokens with the
+   project's public JWKS and talks to Postgres directly.
+3. **Vercel**: add `NEXT_PUBLIC_API_URL` = the Render URL (e.g. `https://covenant-api.onrender.com`),
+   then redeploy.
+4. If the web app's URL changes, update `API_CORS_ORIGINS` on Render.
+
+The free Render instance sleeps after 15 idle minutes; the first request after that takes up to
+a minute (the web app pings `/health` when the Portfolio page opens and says so while waiting).
+
 ### 4. GitHub Actions
 
 Repo → **Settings → Secrets and variables → Actions**:
@@ -102,6 +122,19 @@ uv run python -m tripwire_llm signals --submit  # Batch API; refuses above budge
 uv run python -m tripwire_llm signals --collect # waits, verifies quotes, loads curated.text_signal
 ```
 
+## Lender data: capacity and scoring
+
+New borrowers matched in a lender workspace are queued in `ml.served_company`. The hourly
+`score-new` job fetches their SEC data and scores them today plus every past as-of date since
+2019; the weekly job keeps them fresh. Each served company adds about 4 MB to the database, so
+the number served is capped (`ml.serving_limits`, default 70 including the 50 demo companies).
+Companies over the cap stay matched but unscored, and the Portfolio page says so.
+
+```sql
+update ml.serving_limits set max_companies = 70;
+select status, count(*) from ml.served_company group by 1;
+```
+
 ## Running the weekly refresh by hand
 
 Actions → **refresh-demo** → **Run workflow** (optional `as_of`). Or locally: `make cloud-refresh`.
@@ -121,6 +154,7 @@ New predictions are dated the run day; the watchlist date picker lists them as "
 | Change | Do |
 |---|---|
 | Web app code | Merge to `main`. Vercel redeploys. |
+| API code (`services/`, `packages/`, `config/`) | Merge to `main`. Render redeploys. |
 | New migration | `make cloud-migrate` (before merging code that needs it). |
 | New model (after `python -m tripwire_ml train`) | `make demo-bundle && make cloud-seed`. The new version becomes active; old predictions stay. |
 | Different demo companies | Edit / regenerate `config/domain/finance/demo_portfolio.yaml` (`scripts/build_demo_portfolio.py`), then `make demo-bundle && make cloud-seed`. |

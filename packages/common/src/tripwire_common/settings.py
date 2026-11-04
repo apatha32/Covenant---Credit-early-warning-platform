@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     supabase_service_role_key: SecretStr | None = None
     supabase_storage_bucket: str = "tripwire"
     database_url: SecretStr | None = None
+    # API (Phase 6b): only for a local Supabase that signs tokens with a shared secret; hosted
+    # projects sign with asymmetric keys, verified through their JWKS endpoint.
+    supabase_jwt_secret: SecretStr | None = None
+    api_cors_origins: str = "http://localhost:3000"  # comma-separated web app origins
 
     @field_validator("tripwire_config_dir", "tripwire_data_dir")
     @classmethod

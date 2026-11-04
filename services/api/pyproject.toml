@@ -2,10 +2,19 @@
 name = "tripwire-api"
 version = "0.1.0"
 requires-python = ">=3.12,<3.13"
-dependencies = ["tripwire-common"]
+dependencies = [
+    "fastapi>=0.162.0",
+    "psycopg-pool>=3.3.3",
+    "pyjwt[crypto]>=2.15.1",
+    "python-multipart>=0.0.33",
+    "tripwire-common",
+    "tripwire-pipeline",
+    "uvicorn[standard]>=0.54.0",
+]
 
 [tool.uv.sources]
 tripwire-common = { workspace = true }
+tripwire-pipeline = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

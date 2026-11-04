@@ -1,0 +1,39 @@
+name: score-new
+
+# Hourly: companies that lenders matched since the last run (ml.served_company 'queued') get
+# their SEC data fetched and are scored as of today and on past as-of dates since 2019, then
+# alerts are written. Exits in seconds when nothing is queued. The weekly refresh-demo job
+# re-scores everything already served.
+on:
+  schedule:
+    - cron: "41 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: refresh-demo # never overlaps the weekly refresh
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TRIPWIRE_ENV: prod
+      TRIPWIRE_STORAGE: supabase
+      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --all-packages --locked
+      - name: Score newly added companies
+        run: uv run python -m tripwire_ml serve-new

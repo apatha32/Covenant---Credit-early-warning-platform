@@ -1,8 +1,8 @@
 name: refresh-demo
 
-# Weekly: refresh SEC data for the 50 demo companies through the per-company API (not the bulk
-# files), plus FRED, then re-score them as of the run date with the active model and write new
-# predictions. Every step logs a raw.ingest_runs row in Supabase. A failed run fails this job,
+# Weekly: refresh SEC data for every served company (the 50 demo companies plus lenders' matched
+# borrowers) through the per-company API (not the bulk files), plus FRED, then re-score them as
+# of the run date with the active model and write new predictions. Every step logs a raw.ingest_runs row in Supabase. A failed run fails this job,
 # and GitHub emails a failure notification (Settings > Notifications > Actions).
 on:
   schedule:
@@ -40,7 +40,7 @@ jobs:
           enable-cache: true
       - run: uv python install 3.12
       - run: uv sync --all-packages --locked
-      - name: Refresh and re-score the demo portfolio
+      - name: Refresh and re-score every served company
         env:
           AS_OF: ${{ inputs.as_of }}
         run: uv run python -m tripwire_ml demo-refresh ${AS_OF:+--as-of "$AS_OF"}

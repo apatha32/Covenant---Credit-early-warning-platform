@@ -26,21 +26,25 @@ and maybe tickers. Covenant:
    English, why a borrower is flagged.
 4. **Gives analysts a console**: a watchlist you can rewind to any past quarter and drill-downs
    with evidence ([live](https://covenant-credit-early-warning-platf.vercel.app)), text risk signals
-   with quoted evidence, and "Ask the filings" Q&A with citations. Alert dispositions come in 6b.
+   with quoted evidence, "Ask the filings" Q&A with citations, and an alerts inbox where analysts
+   agree with or dismiss each alert.
 
 ## Live demo
 
-**[covenant-credit-early-warning-platf.vercel.app](https://covenant-credit-early-warning-platf.vercel.app)**: no sign-up, read-only. Visitors get an anonymous session
-that can read only the demo portfolio (50 real SEC filers, fictional lender).
+**[covenant-credit-early-warning-platf.vercel.app](https://covenant-credit-early-warning-platf.vercel.app)**: no sign-up needed to look around. Visitors get an anonymous,
+read-only session on the demo portfolio (50 real SEC filers, fictional lender). **Sign in → create
+an account** to get your own workspace: upload a borrower CSV (try the messy sample on the
+Portfolio page), review the uncertain matches, and watch the alerts inbox.
 
 1. The watchlist opens **as of June 30, 2024**. Spirit Airlines is in the high-risk tier (4.4%).
 2. Spirit filed for Chapter 11 on **Nov 18, 2024**, 4.6 months later. The score used only data public on June 30.
 3. Click through to Spirit's top reasons: liabilities / assets rose from 0.84 to 0.89, cash / assets fell from 0.15 to 0.09.
 4. Drag the "as of" slider to any quarter since 2011; every score is point in time.
-5. The model card tab has the full evaluation.
+5. The model card tab has the full evaluation; Alerts shows Spirit's tier rising to high on June 30, 2024.
 
-Hosted on Vercel (Next.js) and Supabase; a GitHub Actions job refreshes SEC data for the demo
-companies weekly and re-scores them. See [docs/deploy.md](docs/deploy.md).
+Hosted on Vercel (Next.js), Render (the Python API) and Supabase; GitHub Actions refresh and
+re-score every served company weekly and score newly uploaded borrowers hourly. See
+[docs/deploy.md](docs/deploy.md).
 
 ## Results so far
 
@@ -51,7 +55,7 @@ companies weekly and re-scores them. See [docs/deploy.md](docs/deploy.md).
 | Canonical financials | 25 metrics from 50+ XBRL tags with ordered fallback, year-to-date → quarterly derivation, restatement versions, scale-error quarantine; core metrics complete for 139/179 active companies | [coverage report](reports/metric_coverage.md) |
 | Entity resolution | **100% auto-match precision at 82% coverage** on a held-out 100-row messy file (typos, old names, missing/wrong tickers); **0 wrong matches** on hand-written subsidiary/namesake traps | [evaluation](reports/entity_resolution_eval.md) |
 | Distress model | **LightGBM PR-AUC 0.098 vs 0.019 for an Altman Z'' baseline** (5x; base rate 1.1%) on 2022+ test data across ~6,000 companies; 65% of bankruptcies ranked in the riskiest 10%; flagged a median **14 months** before filing (151 of 211); beats Altman in every backtest year 2015-2024 | [model card](reports/model_eval.md) |
-| Engineering | Leakage test (features recomputed with all later data deleted must not change, and a planted leak must be caught), Postgres row-level security for multi-tenancy, 282 automated tests in CI against a real Supabase database, plus a web build | [CI](https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions) |
+| Engineering | Leakage test (features recomputed with all later data deleted must not change, and a planted leak must be caught), Postgres row-level security for multi-tenancy, 316 automated tests in CI against a real Supabase database, plus a web build | [CI](https://github.com/apatha32/Covenant---Credit-early-warning-platform/actions) |
 
 ## Architecture
 
@@ -93,11 +97,11 @@ flowchart LR
 | 4 | Features, labels, Altman / logistic / LightGBM models, SHAP, model card | ✅ Done |
 | 5 | LLM risk signals from filing text (Claude Haiku), "Ask the filings" Q&A with citations (Claude Sonnet) | ✅ Done |
 | 6a | Analyst console + read-only public demo, weekly refresh ([live](https://covenant-credit-early-warning-platf.vercel.app)) | ✅ Done |
-| 6b | API, borrower upload and review, alerts | Next |
-| 7 | Hosting (Supabase + scheduled jobs + Vercel), drift monitoring, alerts | Planned |
+| 6b | Lender accounts and workspaces, FastAPI, borrower upload + match review, alerts inbox, Data Health page | ✅ Done |
+| 7 | Drift monitoring, recalibration, job failure alerts, load test | Planned |
 
 **Stack:** Python 3.12, Polars, PostgreSQL / Supabase (RLS, Storage, pgvector), rapidfuzz,
-Pandera, scikit-learn, LightGBM with TreeSHAP, Claude API (Phase 5), Next.js (Phase 6).
+Pandera, scikit-learn, LightGBM with TreeSHAP, Claude API (Phase 5), Next.js and FastAPI (Phase 6).
 Full build spec: [SPEC.md](SPEC.md).
 
 ## Repository layout
@@ -234,6 +238,35 @@ uv run python -m tripwire_llm signals --collect   # verify every quote, load cur
   it refuses without calling the model when nothing relevant is found. Claude Sonnet 5.5 answers
   from numbered excerpts with quotes; quotes not found in the cited excerpt are dropped. Limits per
   visitor and per day live in `ml.qa_limits`. [Citation check](reports/qa_eval.md).
+
+## Lender accounts, upload and alerts (Phase 6b)
+
+```sh
+uv run python -m tripwire_api                 # the API on :8000 (DATABASE_URL, SUPABASE_URL)
+uv run python -m tripwire_ml serve-new        # score companies lenders added (hourly in Actions)
+```
+
+- **Accounts and workspaces:** Supabase email sign-up. A user creates a workspace (tenant) and
+  becomes its owner; owners and admins add teammates by email as viewer / analyst / admin.
+  Anonymous visitors still read only the demo and can change nothing.
+- **API (`services/api`, FastAPI on Render):** every write goes through it: create workspace, add
+  member, upload CSV, decide a review item, search companies, remove a borrower, agree with or
+  dismiss an alert. It verifies the Supabase JWT (ES256 via the project's JWKS), checks the user's
+  role in that tenant itself (the service connection bypasses RLS) and writes `app.audit_log`.
+  Reads stay on the RLS-protected `api` views, as in 6a.
+- **Upload → watchlist:** the Phase 3 matcher runs against all 46,063 SEC operating filers
+  (training universe, former names and the SEC ticker map). Confident rows are matched; the rest
+  land in a review queue with candidates and a search box. Matched companies are queued in
+  `ml.served_company`; the hourly job fetches their SEC data, scores them today and on every past
+  as-of date since 2019, so each gets a score history. Demo-sized capacity: 70 companies
+  (`ml.serving_limits`), about 4 MB of curated data each on the free database.
+- **Alerts:** `app.generate_alerts()` opens one alert per tenant when a borrower's risk tier
+  rises, plus one if a borrower is high risk (on a score from the last six months) when it is
+  added. Analysts agree or dismiss (a reason is required); dispositions are append-only.
+  Example: WW International (not in the demo) added to a test workspace was scored back to 2019
+  and shows high risk from June 2024, 10 months before its May 2025 Chapter 11 filing.
+- **Data Health page:** last run of every pipeline step, quarantine counts by rule, served
+  companies vs capacity.
 
 Against a real Supabase stack instead of the shim: `supabase db start` (database only) or
 `supabase start` (full local stack), then `supabase db push` to deploy to a linked project.

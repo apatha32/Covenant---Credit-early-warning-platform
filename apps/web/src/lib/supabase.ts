@@ -69,6 +69,38 @@ export function useQuery<T>(
   return state;
 }
 
+export type SessionUser = { id: string; email: string | null; isAnonymous: boolean };
+
+/** Who is signed in: an account, or an anonymous demo visitor. */
+export async function currentUser(): Promise<SessionUser | null> {
+  const sb = await signedIn();
+  const { data } = await sb.auth.getSession();
+  const u = data.session?.user;
+  return u ? { id: u.id, email: u.email ?? null, isAnonymous: Boolean(u.is_anonymous) } : null;
+}
+
+/** Account sign-in. Replaces the anonymous demo session. */
+export async function signInWithPassword(email: string, password: string): Promise<void> {
+  const sb = getClient();
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+}
+
+/** Returns true when the account is signed in right away, false when it must confirm by email. */
+export async function signUp(email: string, password: string): Promise<boolean> {
+  const sb = getClient();
+  await sb.auth.signOut({ scope: "local" });
+  const { data, error } = await sb.auth.signUp({ email, password });
+  if (error) throw error;
+  return Boolean(data.session);
+}
+
+/** Back to the anonymous demo. */
+export async function signOut(): Promise<void> {
+  await getClient().auth.signOut({ scope: "local" });
+  session = null;
+}
+
 /** The current session's access token (for server routes that act as this visitor). */
 export async function accessToken(): Promise<string> {
   const sb = await signedIn();

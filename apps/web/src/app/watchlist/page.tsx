@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { STORY, TIERS, asOfLabel, fmtDate, monthsBetween, pct } from "@/lib/format";
 import { useQuery } from "@/lib/supabase";
+import { useWorkspace } from "@/lib/workspace";
 import type { Tier, WatchlistRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -24,9 +25,29 @@ export default function WatchlistPage() {
 }
 
 function Watchlist() {
+  const ws = useWorkspace();
+  if (ws.loading) return <Loading />;
+  if (!ws.tenant) return <NoWorkspace />;
+  return <WatchlistFor tenantId={ws.tenant.id} tenantName={ws.tenant.name} isDemo={ws.isDemo} />;
+}
+
+function NoWorkspace() {
+  return (
+    <div className="mx-auto max-w-md space-y-3 pt-16 text-center">
+      <h1 className="text-2xl font-bold">No workspace yet</h1>
+      <p className="text-sm text-muted-foreground">
+        Create a workspace and upload your borrower list to get a watchlist.
+      </p>
+      <Button asChild>
+        <Link href="/portfolio">Set up a workspace →</Link>
+      </Button>
+    </div>
+  );
+}
+
+function WatchlistFor({ tenantId, tenantName, isDemo }: { tenantId: string; tenantName: string; isDemo: boolean }) {
   const router = useRouter();
   const params = useSearchParams();
-  const asOf = params.get("as_of") ?? STORY.asOf;
   const tier = (params.get("tier") ?? "all") as Tier | "all";
   const sector = params.get("sector") ?? "all";
 
@@ -34,9 +55,20 @@ function Watchlist() {
     (sb) => sb.from("as_of_dates").select("as_of_date").order("as_of_date"),
     [],
   );
+  const latest = dates.data?.at(-1)?.as_of_date;
+  // The demo opens on the guided Spirit date; a lender's own book opens on the latest scores.
+  const asOf = params.get("as_of") ?? (isDemo ? STORY.asOf : (latest ?? ""));
   const rows = useQuery<WatchlistRow[]>(
-    (sb) => sb.from("watchlist").select("*").eq("as_of_date", asOf).order("probability", { ascending: false }),
-    [asOf],
+    (sb) =>
+      asOf
+        ? sb
+            .from("watchlist")
+            .select("*")
+            .eq("tenant_id", tenantId)
+            .eq("as_of_date", asOf)
+            .order("probability", { ascending: false })
+        : Promise.resolve({ data: [], error: null }),
+    [asOf, tenantId],
   );
 
   function update(next: Record<string, string>) {
@@ -52,8 +84,7 @@ function Watchlist() {
   const index = allDates.indexOf(asOf);
   const ranked = useMemo(
     () =>
-      (rows.data ?? [])
-        .slice()
+      [...new Map((rows.data ?? []).map((r) => [r.cik, r])).values()] // one row per company across portfolios
         .sort(
           (a, b) => TIER_ORDER.indexOf(a.risk_tier) - TIER_ORDER.indexOf(b.risk_tier) || b.probability - a.probability,
         ),
@@ -65,17 +96,29 @@ function Watchlist() {
   );
   const counts = Object.fromEntries(TIER_ORDER.map((t) => [t, ranked.filter((r) => r.risk_tier === t).length]));
   const story = ranked.find((r) => r.cik === STORY.cik);
-  const storyOn = asOf === STORY.asOf && story;
+  const storyOn = isDemo && asOf === STORY.asOf && story;
 
   return (
     <div className="space-y-5 pt-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold tracking-[0.08em] text-brand uppercase">Demo Credit Fund (fictional)</p>
+          <p className="text-xs font-semibold tracking-[0.08em] text-brand uppercase">{tenantName}</p>
           <h1 className="text-3xl font-bold tracking-tight">Watchlist</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            50 SEC filers: 25 of the largest companies that went bankrupt in 2022 or later (chosen by size, not by
-            score, so misses stay in) and 25 healthy companies across sectors.
+            {isDemo ? (
+              <>
+                50 SEC filers: 25 of the largest companies that went bankrupt in 2022 or later (chosen by size, not by
+                score, so misses stay in) and 25 healthy companies across sectors.
+              </>
+            ) : (
+              <>
+                Matched borrowers that have scores. New borrowers are scored within the hour; see{" "}
+                <Link href="/portfolio" className="text-brand hover:underline">
+                  Portfolio
+                </Link>{" "}
+                for each row&apos;s status.
+              </>
+            )}
           </p>
         </div>
       </div>
@@ -87,7 +130,7 @@ function Watchlist() {
             <History className="size-5 text-brand" aria-hidden />
             <div className="mr-auto">
               <div className="text-xs font-semibold tracking-wide text-brand uppercase">As of</div>
-              <div className="text-xl font-bold tabular-nums">{asOfLabel(asOf)}</div>
+              <div className="text-xl font-bold tabular-nums">{asOf ? asOfLabel(asOf) : "No scores yet"}</div>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -102,7 +145,7 @@ function Watchlist() {
               <select
                 aria-label="As-of date"
                 className="h-9 rounded-md border bg-card px-2 text-sm tabular-nums"
-                value={asOf}
+                value={asOf || ""}
                 onChange={(e) => update({ as_of: e.target.value })}
               >
                 {allDates.length === 0 && <option value={asOf}>{asOf}</option>}
@@ -269,7 +312,9 @@ function Watchlist() {
               {shown.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                    No companies match these filters on this date.
+                    {ranked.length === 0 && !isDemo
+                      ? "No scored borrowers on this date yet. Upload borrowers on the Portfolio page."
+                      : "No companies match these filters on this date."}
                   </TableCell>
                 </TableRow>
               )}
@@ -292,7 +337,5 @@ function Loading() {
 }
 
 function ErrorNote({ message }: { message: string }) {
-  return (
-    <div className="p-6 text-sm text-risk">Could not load the demo data: {message}. Reload the page to try again.</div>
-  );
+  return <div className="p-6 text-sm text-risk">Could not load the data: {message}. Reload the page to try again.</div>;
 }

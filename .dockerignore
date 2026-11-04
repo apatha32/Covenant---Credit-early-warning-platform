@@ -1,0 +1,15 @@
+# Only packages/, services/, config/ and the uv files go into the API image.
+**/.venv
+**/__pycache__
+**/node_modules
+.env*
+data
+apps
+docs
+reports
+evals
+notebooks
+tests
+supabase
+scripts
+.git

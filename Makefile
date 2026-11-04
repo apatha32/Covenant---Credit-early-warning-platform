@@ -1,5 +1,5 @@
 .PHONY: setup lint format typecheck test check db-up db-down db-reset \
-	demo-bundle cloud-migrate cloud-seed cloud-refresh cloud-size web-dev
+	demo-bundle cloud-migrate cloud-seed cloud-refresh cloud-size web-dev api-dev cloud-serve-new
 
 setup:
 	uv sync --all-packages
@@ -49,8 +49,14 @@ cloud-seed:
 cloud-refresh:
 	$(CLOUD) uv run python -m tripwire_ml demo-refresh
 
+cloud-serve-new:
+	$(CLOUD) uv run python -m tripwire_ml serve-new
+
 cloud-size:
 	$(CLOUD) psql "$$DATABASE_URL" -Atc "select pg_size_pretty(pg_database_size(current_database()))"
 
 web-dev:
 	cd apps/web && npm run dev
+
+api-dev:
+	uv run python -m tripwire_api
